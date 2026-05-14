@@ -4,4 +4,4 @@
 
 <h1>{{ $otp }}</h1>
 
-<p>This code expires in 5 minutes.</p>
+<p>This code expires in 24 hours.</p>
