@@ -46,6 +46,9 @@ Route::post('/create-employee', [AuthController::class, 'createEmployee']);
 Route::post('/login', [AuthController::class, 'login']);
 
 
+Route::get('/test', function () {
+    return 'IT WORKS';
+});
     
 
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
