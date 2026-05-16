@@ -1,29 +1,22 @@
 FROM php:8.2-cli
 
 RUN apt-get update && apt-get install -y \
-    unzip \
     git \
+    unzip \
     curl \
+    libpq-dev \
     libzip-dev \
     zip
 
-RUN docker-php-ext-install pdo pdo_mysql zip
+RUN docker-php-ext-install pdo pdo_pgsql pgsql zip
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
 COPY . .
-ENV COMPOSER_MEMORY_LIMIT=-1
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-RUN php artisan config:clear || true
-RUN php artisan cache:clear || true
-RUN php artisan optimize:clear || true
-
-RUN cp .env.example .env || true
-
-RUN php artisan key:generate || true
+RUN composer install --no-dev --prefer-dist --no-interaction
 
 EXPOSE 10000
 
