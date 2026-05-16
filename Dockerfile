@@ -1,35 +1,21 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
-# تثبيت المتطلبات الأساسية
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    curl \
-    zip \
-    libzip-dev \
-    libpq-dev \
-    && docker-php-ext-configure zip \
-    && docker-php-ext-install pdo pdo_pgsql pgsql zip
+    git unzip curl zip \
+    libzip-dev libpq-dev \
+    && docker-php-ext-install pdo_pgsql pgsql zip
 
-# تثبيت Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
+WORKDIR /var/www
 
-# نسخ المشروع
 COPY . .
 
-# تثبيت dependencies
 RUN composer install --no-dev --prefer-dist --no-interaction
 
-# صلاحيات (اختياري لكن مفيد)
 RUN chmod -R 775 storage bootstrap/cache
 
-EXPOSE 10000
+# مهم: لا تشغل migrate + seed داخل build
+# (هذا خطأ شائع على Render)
 
-# تشغيل Laravel
-CMD php artisan config:clear && \
-    php artisan config:cache && \
-    php artisan migrate --force && \
-    php artisan db:seed --force && \
-    php artisan serve --host=0.0.0.0 --port=10000
+CMD php-fpm
