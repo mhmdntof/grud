@@ -43,36 +43,32 @@ class AuthService
     }
 
 
-   public function login(array $data)
+  public function login(array $data)
 {
-    try {
+    // 1. البحث عن المستخدم
+    $user = User::where('email', $data['email'])->first();
 
-        $user = User::where('email', $data['email'])->first();
-
-        if (!$user) {
-            return ['error' => 'Invalid credentials'];
-        }
-
-        if (!Hash::check($data['password'], $user->password)) {
-            return ['error' => 'Invalid credentials'];
-        }
-
-        if (!$user->status) {
-            return ['error' => 'Account not activated'];
-        }
-
-        $token = "test-token";
-        return [
-            'token' => $token,
-            'user' => $user
-        ];
-
-    } catch (\Throwable $e) {
-        return [
-            'error' => 'SERVER ERROR',
-            'message' => $e->getMessage()
-        ];
+    if (!$user) {
+        return ['error' => 'Invalid credentials'];
     }
+
+    // 2. تحقق من كلمة المرور
+    if (!Hash::check($data['password'], $user->password)) {
+        return ['error' => 'Invalid credentials'];
+    }
+
+    // 3. تحقق من تفعيل الحساب
+    if (!$user->status) {
+        return ['error' => 'Account not activated'];
+    }
+
+    // 4. إنشاء token
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return [
+        'token' => $token,
+        'user' => $user
+    ];
 }
 
 
