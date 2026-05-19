@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\ProductController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -35,6 +35,18 @@ Route::middleware([
 
 Route::post('/create-employee', [AuthController::class, 'createEmployee']);
  Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+});
+
+
+//قسم مدير المستودع
+
+
+Route::middleware([
+    'auth:sanctum',
+    'role:warehouse_manager'
+])->group(function () {
+
+Route::post('/add-products', [ProductController::class, 'store']);
 });
 
 
