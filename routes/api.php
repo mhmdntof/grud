@@ -24,20 +24,15 @@ Route::post('/create-hospital-manager', [AuthController::class, 'createHospitalM
 });
 
 
-Route::post('/add-products', function () {
-    return 'route works';
-})->middleware([
-    'auth:sanctum',
-    'role:hospital_manager'
-]);
+
 
 //قسم مدير المشفى 
 
 
-/*Route::middleware([
-  //  'auth:sanctum',
-    //'role:hospital_manager'
-//])->group(function () {
+Route::middleware([
+    'auth:sanctum',
+    'role:hospital_manager'
+])->group(function () {
 
 Route::post('/create-employee', [AuthController::class, 'createEmployee']);
  Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
@@ -48,7 +43,7 @@ Route::post('/add-products', [ProductController::class, 'store']);
 
 //قسم مدير المستودع
 
-*/
+
 
 
 
