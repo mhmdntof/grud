@@ -2,23 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
 use App\Services\ProductService;
+use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
     protected ProductService $productService;
-    
- public function __construct(ProductService $productService)
+
+    // حقن كلاس السيرفيس عبر الـ Constructor
+    public function __construct(ProductService $productService)
     {
         $this->productService = $productService;
     }
-   
 
-    public function store(StoreProductRequest $request)
+    /**
+     * تخزين منتج جديد في المستودع الطبي
+     */
+    public function store(StoreProductRequest $request): JsonResponse
     {
+        // جلب البيانات التي تم التحقق منها فقط وتمريرها للسيرفيس
         $product = $this->productService->create($request->validated());
 
         return response()->json([

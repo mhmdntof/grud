@@ -9,19 +9,13 @@ class ProductService
     public function create(array $data)
     {
         return Product::create([
-            'name' => $data['name'],
-
-            'code' => $data['code'],
-
-            'type' => $data['type'],
-
-            'minimum_stock' => $data['minimum_stock'] ?? 0,
-
-            'unit' => $data['unit'] ?? null,
-
-            'description' => $data['description'] ?? null,
-
-            'total_quantity' => 0
+            'name'           => $data['name'],
+            'code'           => $data['code'],
+            'type'           => $data['type'],
+            'minimum_stock'  => $data['minimum_stock'] ?? 0,
+            'unit'           => $data['unit'] ?? null,
+            'description'    => $data['description'] ?? null,
+            'total_quantity' => 0 // الكمية الكلية تبدأ من الصفر وتزيد عند إدخال شحنات (Stock In)
         ]);
     }
 }

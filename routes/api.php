@@ -42,9 +42,13 @@ Route::post('/create-employee', [AuthController::class, 'createEmployee']);
 
 
 
+Route::middleware([
+    'auth:sanctum',
+    'role:warehouse_manager'
+])->group(function () {
 
-Route::get('/s', [AuthController::class, 's']);
-
+Route::get('/add-products', [AuthController::class, 'store']);
+});
 
 
 
