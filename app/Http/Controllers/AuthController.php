@@ -16,7 +16,7 @@ use App\Http\Requests\StoreProductRequest;
 class AuthController extends Controller
 {
     private AuthService $authService;
- protected ProductService $productService;
+ private ProductService $productService;
 
     public function __construct(AuthService $authService,ProductService $productService)
     {
