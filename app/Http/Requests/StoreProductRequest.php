@@ -22,7 +22,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name'          => 'required|string|max:255',
-            'code'          => 'required|string|max:255|unique:products,code',
+            'code'          => 'required|string|max:255',
             'type'          => 'required|in:fixed,consumable', // fixed للأجهزة والمعدات، consumable للمستلزمات الطبية اليومية
             'minimum_stock' => 'nullable|integer|min:0',
             'unit'          => 'nullable|string|max:100', // مثلاً: علبة، قطعة، ليتر
