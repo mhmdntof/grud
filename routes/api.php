@@ -24,7 +24,12 @@ Route::post('/create-hospital-manager', [AuthController::class, 'createHospitalM
 });
 
 
-
+Route::post('/add-products', function () {
+    return 'route works';
+})->middleware([
+    'auth:sanctum',
+    'role:hospital_manager'
+]);
 
 //قسم مدير المشفى 
 
