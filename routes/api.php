@@ -41,13 +41,13 @@ Route::post('/create-employee', [AuthController::class, 'createEmployee']);
 //قسم مدير المستودع
 
 
-//Route::middleware([
-  //  'auth:sanctum',
-    //'role:warehouse_manager'
-//])->group(function () {
+Route::middleware([
+    'auth:sanctum',
+    'role:hospital_manager'
+])->group(function () {
 
 Route::post('/store', [ProductController::class, 'store']);
-//});
+});
 
 
 
