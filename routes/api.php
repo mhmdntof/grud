@@ -46,7 +46,7 @@ Route::middleware([
     'role:hospital_manager'
 ])->group(function () {
 
-Route::post('/store', [ProductController::class, 'store']);
+Route::post('/store', [AuthController::class, 'store']);
 });
 
 

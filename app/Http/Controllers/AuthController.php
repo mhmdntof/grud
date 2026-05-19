@@ -9,14 +9,19 @@ use App\Http\Requests\CreateEmployeeRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use App\Http\Requests\SetPasswordRequest;
 use App\Http\Requests\ResendOtpRequest;
+use App\Services\ProductService;
+
+use App\Http\Requests\StoreProductRequest;
 
 class AuthController extends Controller
 {
     private AuthService $authService;
+ protected ProductService $productService;
 
-    public function __construct(AuthService $authService)
+    public function __construct(AuthService $authService,ProductService $productService)
     {
         $this->authService = $authService;
+        $this->productService = $productService;
     }
 
     public function createUser(CreateUserRequest $request)
@@ -158,5 +163,16 @@ public function resendOtp(
 
     ]);
 }
+
+
+public function store(StoreProductRequest $request)
+    {
+        $product = $this->productService->create($request->validated());
+
+        return response()->json([
+            'message' => 'Product created successfully',
+            'product' => $product
+        ], 201);
+    }
 
 }
