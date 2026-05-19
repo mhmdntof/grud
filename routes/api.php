@@ -47,7 +47,7 @@ Route::middleware([
     'role:warehouse_manager'
 ])->group(function () {
 
-Route::get('/add-products', [AuthController::class, 'store']);
+Route::get('/p', [AuthController::class, 'store']);
 });
 
 
