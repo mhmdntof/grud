@@ -165,7 +165,7 @@ public function resendOtp(
 }
 
 
-public function store(StoreProductRequest $request)
+public function store(\Illuminate\Http\Request $request)
     {
         dd('وصل الطلب إلى الكونترولر بنجاح!');
         $product = $this->productService->create($request->validated());
