@@ -44,7 +44,7 @@ Route::post('/create-employee', [AuthController::class, 'createEmployee']);
 
 
 
-Route::get('/p', [ProductController::class, 'store']);
+Route::post('/add-products', [ProductController::class, 'store']);
 
 
 
