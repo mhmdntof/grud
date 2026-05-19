@@ -46,7 +46,7 @@ Route::middleware([
     'role:warehouse_manager'
 ])->group(function () {
 
-Route::post('/add-products', [ProductController::class, 'store']);
+Route::post('/store', [ProductController::class, 'store']);
 });
 
 
