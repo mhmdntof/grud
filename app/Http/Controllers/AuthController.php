@@ -167,6 +167,7 @@ public function resendOtp(
 
 public function store(StoreProductRequest $request)
     {
+        dd('وصل الطلب إلى الكونترولر بنجاح!');
         $product = $this->productService->create($request->validated());
 
         return response()->json([
