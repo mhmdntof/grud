@@ -165,15 +165,15 @@ public function resendOtp(
 }
 
 
-public function store(\Illuminate\Http\Request $request)
+public function s(\Illuminate\Http\Request $request)
     {
         dd('وصل الطلب إلى الكونترولر بنجاح!');
-        $product = $this->productService->create($request->validated());
+     //   $product = $this->productService->create($request->validated());
 
-        return response()->json([
-            'message' => 'Product created successfully',
-            'product' => $product
-        ], 201);
+       // return response()->json([
+         //   'message' => 'Product created successfully',
+           // 'product' => $product
+        //], 201);
     }
 
 }
