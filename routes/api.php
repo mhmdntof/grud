@@ -35,7 +35,9 @@ Route::middleware([
 
 Route::post('/create-employee', [AuthController::class, 'createEmployee']);
  Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
-});
+Route::post('/add-products', [ProductController::class, 'store']);
+
+ });
 
 
 //قسم مدير المستودع
@@ -44,7 +46,7 @@ Route::post('/create-employee', [AuthController::class, 'createEmployee']);
 
 
 
-Route::post('/add-products', [ProductController::class, 'store']);
+
 
 
 
