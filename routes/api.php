@@ -43,7 +43,7 @@ Route::post('/create-employee', [AuthController::class, 'createEmployee']);
 
 
 
-Route::post('/s', [AuthController::class, 's']);
+Route::get('/s', [AuthController::class, 's']);
 
 
 
