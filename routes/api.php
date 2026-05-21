@@ -56,7 +56,8 @@ Route::post('/add-products', [ProductController::class, 'store']);
 //قسم عام 
 
 Route::post('/login', [AuthController::class, 'login']);
-
+Route::middleware('auth:sanctum')
+    ->get('/me', [AuthController::class, 'me']);
 
 Route::get('/test', function () {
     return 'IT WORKS';

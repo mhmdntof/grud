@@ -10,6 +10,8 @@ use App\Http\Requests\VerifyOtpRequest;
 use App\Http\Requests\SetPasswordRequest;
 use App\Http\Requests\ResendOtpRequest;
 use App\Services\ProductService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 use App\Http\Requests\StoreProductRequest;
 
@@ -165,6 +167,26 @@ public function resendOtp(
 }
 
 
+public function loginWeb(LoginRequest $request): JsonResponse
+    {
+        // 1. استدعاء السيرفيس للتحقق من الحساب عبر البيانات التي تم التحقق منها (validated)
+        $this->authService->attemptLogin($request->validated());
+
+        // 2. تحديث الجلسة بعد نجاح الدخول (خطوة أمنية إجبارية في الـ SPA)
+        $request->session()->regenerate();
+
+        return response()->json([
+            'message' => 'Authenticated successfully',
+            'user'    => Auth::user()
+        ], 200);
+    }
+
+public function me()
+{
+    return response()->json(
+        $this->authService->me()
+    );
+}
 
 
 }

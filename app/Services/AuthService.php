@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Services;
-
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Role;
@@ -9,6 +10,8 @@ use App\Models\UserOtp;
 use App\Mail\OtpMail;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Department;
+use Spatie\Permission\Traits\HasRoles;
+
 
 class AuthService
 {
@@ -321,5 +324,34 @@ public function resendOtp(array $data)
     ];
 }
 
+
+public function attemptLogin(array $credentials): bool
+    {
+        // محاولة تسجيل الدخول وتفعيل ميزة "تذكرني" (Remember Me) لتبقى الجلسة طويلة
+        if (!Auth::attempt($credentials, true)) {
+            throw ValidationException::withMessages([
+                'email' => ['البيانات المدخلة غير صحيحة.'],
+            ]);
+        }
+
+        return true;
+    }
+
+
+
+public function me()
+{
+    /** @var User $user */
+    $user = Auth::user();
+
+    return [
+        'user' => $user,
+
+        'roles' => $user->getRoleNames(),
+
+        'permissions' => $user->getAllPermissions()
+            ->pluck('name'),
+    ];
+}
 
 }
