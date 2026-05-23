@@ -7,4 +7,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/api/login', [AuthController::class, 'loginWeb']);
+Route::post('/api/login-web', [AuthController::class, 'loginWeb']);
