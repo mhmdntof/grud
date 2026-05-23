@@ -45,7 +45,20 @@ Route::post('/add-products', [ProductController::class, 'store']);
 
 
 
+use Illuminate\Support\Facades\Auth;
 
+Route::get('/test-session', function () {
+
+    session(['test' => 'working']);
+
+    return [
+        'session_id' => session()->getId(),
+        'session' => session('test'),
+        'user' => Auth::user(),
+        'cookies' => request()->cookies->all(),
+    ];
+
+})->middleware('auth:sanctum');
 
 
 
