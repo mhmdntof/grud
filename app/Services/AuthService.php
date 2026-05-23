@@ -344,14 +344,10 @@ public function me()
     /** @var User $user */
     $user = Auth::user();
 
-    return [
+    return response()->json([
         'user' => $user,
-
-        'roles' => $user->getRoleNames(),
-
-        'permissions' => $user->getAllPermissions()
-            ->pluck('name'),
-    ];
+        'role' => $user->role,
+    ]);
 }
 
 }
