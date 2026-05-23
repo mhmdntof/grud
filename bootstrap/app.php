@@ -18,11 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
     $middleware->statefulApi();
 
-$middleware->validateCsrfTokens(except: [
+/*$middleware->validateCsrfTokens(except: [
             'api/login-web',
             'login-web',
-            'login'
-        ]);
+            'api/login'
+        ]);*/
 
 })
     ->withExceptions(function (Exceptions $exceptions): void {
