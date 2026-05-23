@@ -7,4 +7,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/api/login-web', [AuthController::class, 'loginWeb']);
+Route::post('/login', [AuthController::class, 'loginWeb']);
+Route::middleware('auth:sanctum')
+    ->get('/me', [AuthController::class, 'me']);

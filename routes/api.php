@@ -71,8 +71,6 @@ Route::get('/test-session', function () {
 Route::post('/login', [AuthController::class, 'login']);
 //Route::post('/login-web', [AuthController::class, 'loginWeb']);
 
-Route::middleware('auth:sanctum')
-    ->get('/me', [AuthController::class, 'me']);
 
 Route::get('/test', function () {
     return 'IT WORKS';
