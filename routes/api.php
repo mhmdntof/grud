@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -102,5 +103,54 @@ Route::get('/test', function () {
         return response()->json([
             'error' => $e->getMessage()
         ], 500);
+    }
+});
+
+
+Route::get('/test-render', function () {
+
+    Log::info('RENDER TEST OK');
+
+    return response()->json([
+        'message' => 'Render is working fine'
+    ]);
+});
+
+
+Route::get('/test-smtp-connection', function () {
+
+    $host = 'smtp.gmail.com';
+    $port = 587;
+
+    $connection = @fsockopen($host, $port, $errno, $errstr, 10);
+
+    if (!$connection) {
+        return [
+            'status' => 'FAILED',
+            'error' => "$errstr ($errno)"
+        ];
+    }
+
+    fclose($connection);
+
+    return [
+        'status' => 'SUCCESS - Port open'
+    ];
+});
+
+Route::get('/test-mail-local', function () {
+
+    try {
+
+        Mail::raw('Test', function ($m) {
+            $m->to('your_email@gmail.com')
+              ->subject('Test');
+        });
+
+        return 'MAIL SENT';
+
+    } catch (\Throwable $e) {
+
+        return $e->getMessage();
     }
 });
