@@ -84,15 +84,12 @@ Route::get('/test', function () {
 
   Route::get('/mail-test', function () {
 
-    $to = "mntwf38@gmail.com";
+   Mail::raw('Brevo Test Email', function ($message) {
 
-    Mail::raw('TEST MESSAGE FROM SYSTEM', function ($message) use ($to) {
-        $message->to($to)
-            ->subject('Resend Debug Test');
+        $message->to('YOUR_TEST_EMAIL@gmail.com')
+            ->subject('Brevo Working');
+
     });
 
-    return [
-        'sent_to' => $to,
-        'status' => 'sent_called'
-    ];
+    return 'Email Sent';
 });
