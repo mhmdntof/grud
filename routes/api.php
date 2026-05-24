@@ -82,11 +82,24 @@ Route::get('/test', function () {
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
 
-   Route::get('/mail-test', function () {
-     Mail::raw('Hello from Resend', function ($message) {
-        $message->to('ntofmhmd88@gmail.com')
-            ->subject('Test Email');
-    });
+  Route::get('/mail-test', function () {
 
-    return 'email sent';
+    try {
+
+        Mail::raw('Hello from Hospital System - OTP TEST', function ($message) {
+            $message->to('ntofmhmd88@gmail.com')
+                ->subject('Test Email from Resend');
+        });
+
+        return response()->json([
+            'message' => 'Email sent successfully'
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'message' => 'Email failed',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 });
