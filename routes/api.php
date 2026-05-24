@@ -84,12 +84,23 @@ Route::get('/test', function () {
 
   Route::get('/mail-test', function () {
 
-   Mail::raw('Brevo Test Email', function ($message) {
+    try {
 
-        $message->to('mntwf38@gmail.com')
-            ->subject('Brevo Working');
+        Mail::raw('HELLO FROM BREVO', function ($message) {
 
-    });
+            $message->to('ايميلك@gmail.com')
+                ->subject('Brevo Test');
 
-    return 'Email Sent';
+        });
+
+        return response()->json([
+            'message' => 'MAIL SENT'
+        ]);
+
+    } catch (\Throwable $e) {
+
+        return response()->json([
+            'error' => $e->getMessage()
+        ], 500);
+    }
 });
