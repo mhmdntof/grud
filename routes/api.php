@@ -82,14 +82,12 @@ Route::get('/test', function () {
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
 
-    Route::get('/test-mail', function () {
-
-    Mail::raw('This is a test email from Laravel', function ($message) {
-
-        $message->to('ntofmhmd88@gmail.com')
-            ->subject('Test Mail');
+   Route::get('/mail-test', function () {
+    Mail::raw('test mail', function ($m) {
+        $m->to('ntofmhmd88@gmail.com')
+          ->subject('test');
     });
 
-    return 'Mail sent';
+    return 'ok';
 });
    
