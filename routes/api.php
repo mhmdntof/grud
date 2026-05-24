@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use Illuminate\Support\Facades\Mail;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -80,4 +81,15 @@ Route::get('/test', function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
+
+    Route::get('/test-mail', function () {
+
+    Mail::raw('This is a test email from Laravel', function ($message) {
+
+        $message->to('ntofmhmd88@gmail.com')
+            ->subject('Test Mail');
+    });
+
+    return 'Mail sent';
+});
    
