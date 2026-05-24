@@ -153,11 +153,11 @@ public function createEmployee(array $data)
             Log::info('RESEND MAIL START');
 
             Resend::emails()->send([
-                'from' => 'Hospital System <onboarding@resend.dev>',
-                'to' => $user->email,
-                'subject' => 'Your OTP Code',
-                'html' => '<h2>Your OTP is: '.$otp.'</h2>',
-            ]);
+    'from' => 'onboarding@resend.dev',
+    'to' => 'ntofmhmd88@gmail.com',
+    'subject' => 'OTP Test',
+    'html' => '<h1>It works</h1>',
+]);
 
             Log::info('RESEND MAIL SUCCESS');
 
