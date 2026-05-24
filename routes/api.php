@@ -83,11 +83,13 @@ Route::get('/test', function () {
 
 
    Route::get('/mail-test', function () {
-    Mail::raw('test mail', function ($m) {
-        $m->to('ntofmhmd88@gmail.com')
-          ->subject('test');
-    });
+   $response = Resend::emails()->send([
+        'from' => 'onboarding@resend.dev',
+        'to' => 'ntofmhmd88@gmail.com',
+        'subject' => 'Test',
+        'html' => 'Hello from Resend',
+    ]);
 
-    return 'ok';
+    return $response;
 });
    
