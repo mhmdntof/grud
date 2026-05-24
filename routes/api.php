@@ -86,7 +86,7 @@ Route::get('/test', function () {
 
    Mail::raw('Brevo Test Email', function ($message) {
 
-        $message->to('YOUR_TEST_EMAIL@gmail.com')
+        $message->to('mntwf38@gmail.com')
             ->subject('Brevo Working');
 
     });
