@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,7 +29,16 @@ Route::middleware([
 });
 
 
+Route::get('/test-mail', function () {
 
+    Mail::raw('This is a test email from Laravel', function ($message) {
+
+        $message->to('ntofmhmd88@gmail.com')
+            ->subject('Test Mail');
+    });
+
+    return 'Mail sent';
+});
 
     return response()->json([
         'authenticated' => Auth::check(),
