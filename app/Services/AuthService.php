@@ -156,9 +156,9 @@ public function createEmployee(array $data)
 
             Log::info('MAIL START');
 
-          //  Mail::to($user->email)->send(
-            //    new OtpMail($otp)
-            //)
+            Mail::to($user->email)->send(
+                new OtpMail($otp)
+            )
             ;
 
             Log::info('MAIL SUCCESS');
