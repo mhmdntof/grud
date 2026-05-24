@@ -23,4 +23,12 @@ protected $fillable = [
 {
     return $this->hasMany(Batch::class);
 }
+public function departments()
+{
+    return $this->belongsToMany(
+        Department::class,
+        'department_products'
+    )->withPivot('quantity');
+}
+
 }

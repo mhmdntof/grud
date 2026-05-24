@@ -11,6 +11,7 @@ use App\Mail\OtpMail;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Department;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\Log;
 
 
 class AuthService
@@ -99,52 +100,74 @@ public function createHospitalManager(array $data)
 
 public function createEmployee(array $data)
 {
-    // 1. جلب الرول
-    $role = Role::where('name', $data['role'])->firstOrFail();
+    try {
 
-    // 2. جلب القسم
-    $department = Department::where(
-        'name',
-        $data['department']
-    )->firstOrFail();
+        // 1. جلب الرول
+        $role = Role::where(
+            'name',
+            $data['role']
+        )->firstOrFail();
 
-    // 3. إنشاء المستخدم
-    $user = User::create([
+        // 2. جلب القسم
+        $department = Department::where(
+            'name',
+            $data['department']
+        )->firstOrFail();
 
-        'name' => $data['name'],
+        // 3. إنشاء المستخدم
+        $user = User::create([
 
-        'email' => $data['email'],
+            'name' => $data['name'],
 
-        'role_id' => $role->id,
+            'email' => $data['email'],
 
-        'department_id' => $department->id,
+            'role_id' => $role->id,
 
-        'status' => false,
+            'department_id' => $department->id,
 
-        'password' => null,
-    ]);
+            'status' => false,
 
-    // 4. توليد OTP
-    $otp = rand(100000, 999999);
+            'password' => null,
+        ]);
 
-    // 5. تخزين OTP
-    UserOtp::create([
+        // 4. توليد OTP
+        $otp = rand(100000, 999999);
 
-        'user_id' => $user->id,
+        // 5. تخزين OTP
+        UserOtp::create([
 
-        'otp' => $otp,
+            'user_id' => $user->id,
 
-       'expires_at' => now()->addHours(24),
-    ]);
+            'otp' => $otp,
 
-    // 6. إرسال الإيميل
-    Mail::to($user->email)->send(
-        new OtpMail($otp)
-    );
+            'expires_at' => now()->addHours(24),
+        ]);
 
-    return [
-        'message' => 'Employee created and OTP sent'
-    ];
+        // 6. إرسال الإيميل
+        Mail::to($user->email)->send(
+            new OtpMail($otp)
+        );
+
+        // 7. نجاح العملية
+        return [
+
+            'message' => 'Employee created and OTP sent',
+
+            'user' => $user
+        ];
+
+    } catch (\Exception $e) {
+
+        // تسجيل الخطأ داخل logs
+        Log::error('Create Employee Error: ' . $e->getMessage());
+
+        return [
+
+            'message' => 'Something went wrong',
+
+            'error' => $e->getMessage(),
+        ];
+    }
 }
 
 
