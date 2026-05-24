@@ -169,3 +169,7 @@ Route::get('/test-email', function () {
 
     return $response->json();
 });
+
+Route::get('/test-resend-key', function () {
+    return env('RESEND_API_KEY');
+});
