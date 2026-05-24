@@ -84,22 +84,15 @@ Route::get('/test', function () {
 
   Route::get('/mail-test', function () {
 
-    try {
+    $to = "ntofmhmd88@gmail.com";
 
-        Mail::raw('Hello from Hospital System - OTP TEST', function ($message) {
-            $message->to('ntofmhmd88@gmail.com')
-                ->subject('Test Email from Resend');
-        });
+    Mail::raw('TEST MESSAGE FROM SYSTEM', function ($message) use ($to) {
+        $message->to($to)
+            ->subject('Resend Debug Test');
+    });
 
-        return response()->json([
-            'message' => 'Email sent successfully'
-        ]);
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            'message' => 'Email failed',
-            'error' => $e->getMessage()
-        ], 500);
-    }
+    return [
+        'sent_to' => $to,
+        'status' => 'sent_called'
+    ];
 });
