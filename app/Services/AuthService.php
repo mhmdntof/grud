@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\Department;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\Log;
-
+use Resend\Laravel\Facades\Resend;
 
 class AuthService
 {
@@ -104,12 +104,10 @@ public function createEmployee(array $data)
 
         Log::info('CREATE EMPLOYEE START', $data);
 
-        // 1. جلب الرول (بدون firstOrFail حتى ما يوقف السكربت)
+        // 1. جلب الرول
         $role = Role::where('name', $data['role'])->first();
 
         if (!$role) {
-            Log::error('ROLE NOT FOUND', ['role' => $data['role']]);
-
             return response()->json([
                 'message' => 'Role not found',
                 'role' => $data['role']
@@ -120,8 +118,6 @@ public function createEmployee(array $data)
         $department = Department::where('name', $data['department'])->first();
 
         if (!$department) {
-            Log::error('DEPARTMENT NOT FOUND', ['department' => $data['department']]);
-
             return response()->json([
                 'message' => 'Department not found',
                 'department' => $data['department']
@@ -140,7 +136,7 @@ public function createEmployee(array $data)
 
         Log::info('USER CREATED', ['user_id' => $user->id]);
 
-        // 4. OTP
+        // 4. توليد OTP
         $otp = rand(100000, 999999);
 
         UserOtp::create([
@@ -151,26 +147,28 @@ public function createEmployee(array $data)
 
         Log::info('OTP CREATED', ['otp' => $otp]);
 
-        // 5. إرسال الإيميل (محمي بالكامل)
+        // 5. إرسال الإيميل عبر Resend
         try {
 
-            Log::info('MAIL START');
+            Log::info('RESEND MAIL START');
 
-            Mail::to($user->email)->send(
-                new OtpMail($otp)
-            )
-            ;
+            Resend::emails()->send([
+                'from' => 'Hospital System <onboarding@resend.dev>',
+                'to' => $user->email,
+                'subject' => 'Your OTP Code',
+                'html' => '<h2>Your OTP is: '.$otp.'</h2>',
+            ]);
 
-            Log::info('MAIL SUCCESS');
+            Log::info('RESEND MAIL SUCCESS');
 
         } catch (\Throwable $e) {
 
-            Log::error('MAIL FAILED', [
+            Log::error('RESEND ERROR', [
                 'error' => $e->getMessage()
             ]);
 
             return response()->json([
-                'message' => 'Employee created but mail failed',
+                'message' => 'Employee created but email failed',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -178,13 +176,13 @@ public function createEmployee(array $data)
         Log::info('CREATE EMPLOYEE END');
 
         return response()->json([
-            'message' => 'Employee created successfully',
+            'message' => 'Employee created and OTP sent',
             'user' => $user
         ]);
 
     } catch (\Throwable $e) {
 
-        Log::error('CREATE EMPLOYEE CRASHED', [
+        Log::error('CREATE EMPLOYEE CRASH', [
             'error' => $e->getMessage()
         ]);
 
