@@ -100,76 +100,55 @@ public function createHospitalManager(array $data)
 
 public function createEmployee(array $data)
 {
+    Log::info('START createEmployee');
+
+    $role = Role::where('name', $data['role'])->firstOrFail();
+    $department = Department::where('name', $data['department'])->firstOrFail();
+
+    $user = User::create([
+        'name' => $data['name'],
+        'email' => $data['email'],
+        'role_id' => $role->id,
+        'department_id' => $department->id,
+        'status' => false,
+        'password' => null,
+    ]);
+
+    Log::info('USER CREATED', ['id' => $user->id]);
+
+    $otp = rand(100000, 999999);
+
+    UserOtp::create([
+        'user_id' => $user->id,
+        'otp' => $otp,
+        'expires_at' => now()->addHours(24),
+    ]);
+
+    Log::info('OTP CREATED');
+
     try {
 
-        // 1. جلب الرول
-        $role = Role::where(
-            'name',
-            $data['role']
-        )->firstOrFail();
+        Log::info('BEFORE MAIL');
 
-        // 2. جلب القسم
-        $department = Department::where(
-            'name',
-            $data['department']
-        )->firstOrFail();
+        Mail::to($user->email)->send(new OtpMail($otp));
 
-        // 3. إنشاء المستخدم
-        $user = User::create([
+        Log::info('MAIL SENT');
 
-            'name' => $data['name'],
+    } catch (\Throwable $e) {
 
-            'email' => $data['email'],
-
-            'role_id' => $role->id,
-
-            'department_id' => $department->id,
-
-            'status' => false,
-
-            'password' => null,
-        ]);
-
-        // 4. توليد OTP
-        $otp = rand(100000, 999999);
-
-        // 5. تخزين OTP
-        UserOtp::create([
-
-            'user_id' => $user->id,
-
-            'otp' => $otp,
-
-            'expires_at' => now()->addHours(24),
-        ]);
-
-        // 6. إرسال الإيميل
-        Mail::to($user->email)->send(
-            new OtpMail($otp)
-        );
-
-        // 7. نجاح العملية
-        return [
-
-            'message' => 'Employee created and OTP sent',
-
-            'user' => $user
-        ];
-
-    } catch (\Exception $e) {
-
-        // تسجيل الخطأ داخل logs
-        Log::error('Create Employee Error: ' . $e->getMessage());
+        Log::error('MAIL ERROR', ['msg' => $e->getMessage()]);
 
         return [
-
-            'message' => 'Something went wrong',
-
-            'error' => $e->getMessage(),
+            'error' => $e->getMessage()
         ];
     }
-}
 
+    Log::info('END createEmployee');
+
+    return [
+        'message' => 'Employee created and OTP sent'
+    ];
+}
 
 
 public function verifyOtp(array $data)
