@@ -84,7 +84,7 @@ Route::get('/test', function () {
 
   Route::get('/mail-test', function () {
 
-    $to = "ntofmhmd88@gmail.com";
+    $to = "mntwf38@gmail.com";
 
     Mail::raw('TEST MESSAGE FROM SYSTEM', function ($message) use ($to) {
         $message->to($to)
