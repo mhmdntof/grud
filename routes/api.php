@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -153,4 +154,18 @@ Route::get('/test-mail-local', function () {
 
         return $e->getMessage();
     }
+});
+
+Route::get('/test-email', function () {
+
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer ' . env('RESEND_API_KEY'),
+    ])->post('https://api.resend.com/emails', [
+        'from' => 'Hospital <onboarding@resend.dev>',
+        'to' => 'your_email@gmail.com',
+        'subject' => 'Test Email',
+        'html' => '<h1>OTP TEST</h1>',
+    ]);
+
+    return $response->json();
 });
