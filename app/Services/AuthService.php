@@ -102,62 +102,70 @@ public function createEmployee(array $data)
 {
     try {
 
-        Log::info('START createEmployee');
+        Log::info('CREATE EMPLOYEE START', $data);
 
-        // 1. جلب الرول
-        $role = Role::where('name', $data['role'])->firstOrFail();
+        // 1. جلب الرول (بدون firstOrFail حتى ما يوقف السكربت)
+        $role = Role::where('name', $data['role'])->first();
+
+        if (!$role) {
+            Log::error('ROLE NOT FOUND', ['role' => $data['role']]);
+
+            return response()->json([
+                'message' => 'Role not found',
+                'role' => $data['role']
+            ], 422);
+        }
 
         // 2. جلب القسم
-        $department = Department::where('name', $data['department'])->firstOrFail();
+        $department = Department::where('name', $data['department'])->first();
+
+        if (!$department) {
+            Log::error('DEPARTMENT NOT FOUND', ['department' => $data['department']]);
+
+            return response()->json([
+                'message' => 'Department not found',
+                'department' => $data['department']
+            ], 422);
+        }
 
         // 3. إنشاء المستخدم
         $user = User::create([
-
             'name' => $data['name'],
-
             'email' => $data['email'],
-
             'role_id' => $role->id,
-
             'department_id' => $department->id,
-
             'status' => false,
-
             'password' => null,
         ]);
 
         Log::info('USER CREATED', ['user_id' => $user->id]);
 
-        // 4. توليد OTP
+        // 4. OTP
         $otp = rand(100000, 999999);
 
-        // 5. تخزين OTP
         UserOtp::create([
-
             'user_id' => $user->id,
-
             'otp' => $otp,
-
             'expires_at' => now()->addHours(24),
         ]);
 
         Log::info('OTP CREATED', ['otp' => $otp]);
 
-        // 6. إرسال الإيميل (مع حماية كاملة)
+        // 5. إرسال الإيميل (محمي بالكامل)
         try {
 
-            Log::info('BEFORE MAIL');
+            Log::info('MAIL START');
 
             Mail::to($user->email)->send(
                 new OtpMail($otp)
             );
 
-            Log::info('MAIL SENT SUCCESS');
+            Log::info('MAIL SUCCESS');
 
         } catch (\Throwable $e) {
 
-            Log::error('MAIL ERROR', [
-                'message' => $e->getMessage()
+            Log::error('MAIL FAILED', [
+                'error' => $e->getMessage()
             ]);
 
             return response()->json([
@@ -166,21 +174,21 @@ public function createEmployee(array $data)
             ], 500);
         }
 
-        Log::info('END createEmployee');
+        Log::info('CREATE EMPLOYEE END');
 
         return response()->json([
-            'message' => 'Employee created and OTP sent',
+            'message' => 'Employee created successfully',
             'user' => $user
         ]);
 
     } catch (\Throwable $e) {
 
-        Log::error('CREATE EMPLOYEE FAILED', [
-            'message' => $e->getMessage()
+        Log::error('CREATE EMPLOYEE CRASHED', [
+            'error' => $e->getMessage()
         ]);
 
         return response()->json([
-            'message' => 'Something went wrong',
+            'message' => 'Unexpected error',
             'error' => $e->getMessage()
         ], 500);
     }
