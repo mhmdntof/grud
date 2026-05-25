@@ -32,24 +32,24 @@ class ProductService
 
 
 
-       public function addBatch(array $data)
-    {
-        $batch = Batch::create([
-            'product_id' => $data['product_id'],
-            'batch_number' => $data['batch_number'],
-            'quantity' => $data['quantity'],
-            'expire_date' => $data['expire_date'],
-            'purchase_price' => $data['purchase_price'] ?? null,
-        ]);
+      public function addBatch(array $data)
+{
+    $batch = Batch::create([
+        'product_id' => $data['product_id'],
+        'batch_number' => $data['batch_number'],
+        'quantity' => $data['quantity'],
+        'expire_date' => $data['expire_date'],
+        'purchase_price' => $data['purchase_price'] ?? null,
+    ]);
 
-        $product = Product::findOrFail($data['product_id']);
+    $product = Product::findOrFail($data['product_id']);
 
-        $product->quantity += $data['quantity'];
+    $product->total_quantity += $data['quantity'];
 
-        $product->save();
+    $product->save();
 
-        return $batch;
-    }
+    return $batch;
+}
 }
 
 
