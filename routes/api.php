@@ -55,7 +55,7 @@ Route::middleware([
 ])->group(function () {
 
     Route::post('/add-products', [ProductController::class, 'store']);
-
+    Route::post('/add-batch',[ProductController::class,'addBatch']);
 });
 
 

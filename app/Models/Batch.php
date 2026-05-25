@@ -6,8 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Batch extends Model
 {
+    protected $fillable = [
+        'product_id',
+        'batch_number',
+        'quantity',
+        'expire_date',
+        'purchase_price',
+    ];
+
     public function product()
-{
-    return $this->belongsTo(Product::class);
-}
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

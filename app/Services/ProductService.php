@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\Batch;
+
 
 class ProductService
 {
@@ -25,5 +27,30 @@ class ProductService
             // تبدأ الكمية من الصفر
             'total_quantity' => 0,
         ]);
+ 
+      }
+
+
+
+       public function addBatch(array $data)
+    {
+        $batch = Batch::create([
+            'product_id' => $data['product_id'],
+            'batch_number' => $data['batch_number'],
+            'quantity' => $data['quantity'],
+            'expire_date' => $data['expire_date'],
+            'purchase_price' => $data['purchase_price'] ?? null,
+        ]);
+
+        $product = Product::findOrFail($data['product_id']);
+
+        $product->quantity += $data['quantity'];
+
+        $product->save();
+
+        return $batch;
     }
 }
+
+
+
