@@ -48,22 +48,15 @@ Route::post('/add-products', [ProductController::class, 'store']);
 
 
 
-use Illuminate\Support\Facades\Auth;
 
-Route::get('/test-session', function () {
+Route::middleware([
+    'auth:sanctum',
+    'role:warehouse_manager'
+])->group(function () {
 
-    session(['test' => 'working']);
+    Route::post('/add-products', [ProductController::class, 'store']);
 
-    return [
-        'session_id' => session()->getId(),
-        'session' => session('test'),
-        'user' => Auth::user(),
-        'cookies' => request()->cookies->all(),
-    ];
-
-})->middleware('auth:sanctum');
-
-
+});
 
 
 
@@ -83,93 +76,3 @@ Route::get('/test', function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
-
-  Route::get('/mail-test', function () {
-
-    try {
-
-        Mail::raw('HELLO FROM BREVO', function ($message) {
-
-            $message->to('mntwf38@gmail.com')
-                ->subject('Brevo Test');
-
-        });
-
-        return response()->json([
-            'message' => 'MAIL SENT'
-        ]);
-
-    } catch (\Throwable $e) {
-
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
-
-
-Route::get('/test-render', function () {
-
-    Log::info('RENDER TEST OK');
-
-    return response()->json([
-        'message' => 'Render is working fine'
-    ]);
-});
-
-
-Route::get('/test-smtp-connection', function () {
-
-    $host = 'smtp.gmail.com';
-    $port = 587;
-
-    $connection = @fsockopen($host, $port, $errno, $errstr, 10);
-
-    if (!$connection) {
-        return [
-            'status' => 'FAILED',
-            'error' => "$errstr ($errno)"
-        ];
-    }
-
-    fclose($connection);
-
-    return [
-        'status' => 'SUCCESS - Port open'
-    ];
-});
-
-Route::get('/test-mail-local', function () {
-
-    try {
-
-        Mail::raw('Test', function ($m) {
-            $m->to('your_email@gmail.com')
-              ->subject('Test');
-        });
-
-        return 'MAIL SENT';
-
-    } catch (\Throwable $e) {
-
-        return $e->getMessage();
-    }
-});
-
-Route::get('/test-email', function () {
-
-    $response = Http::withHeaders([
-        'Authorization' => 'Bearer ' . env('RESEND_API_KEY'),
-    ])->post('https://api.resend.com/emails', [
-        'from' => 'Hospital <onboarding@resend.dev>',
-        'to' => 'your_email@gmail.com',
-        'subject' => 'Test Email',
-        'html' => '<h1>OTP TEST</h1>',
-    ]);
-
-    return $response->json();
-});
-
-Route::get('/test-resend-key', function () {
-    return env('RESEND_API_KEY');
-});
