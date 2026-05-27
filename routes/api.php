@@ -80,6 +80,7 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
         Route::post('/damage', [WarehouseController::class, 'damage']);
         Route::get('/alerts', [WarehouseController::class, 'alerts']);
         Route::get('/products', [WarehouseController::class, 'index']);
+        Route::get('/requests', [WarehouseController::class, 'requests']);
     });
 
 

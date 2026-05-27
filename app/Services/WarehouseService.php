@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Http\Resources\BatchResource;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\RequestResource;
 use App\Models\Batch;
 use App\Models\Product;
 use App\Models\Request;
@@ -212,6 +213,56 @@ class WarehouseService
                 'last_page' => $products->lastPage(),
                 'per_page' => $products->perPage(),
                 'total' => $products->total(),
+            ],
+        ];
+    }
+
+    //عرض طلبات الاقسام
+        public function getRequests(array $filters = []): array
+    {
+        $query = \App\Models\Request::query()
+            ->with([
+                'user:id,name',
+                'department:id,name',
+                'product:id,name,code,unit'
+            ]);
+
+        // تصفية حسب الحالة
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // تصفية حسب القسم
+        if (!empty($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        // تصفية حسب النوع
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        // تصفية حسب المنتج
+        if (!empty($filters['product_id'])) {
+            $query->where('product_id', $filters['product_id']);
+        }
+
+        // الترتيب: الطلبات المعلقة أولاً، ثم حسب التاريخ
+        $query->orderByRaw("FIELD(status, 'pending', 'approved', 'in_progress', 'ready', 'delivered', 'rejected', 'cancelled')")
+              ->orderBy('created_at', 'desc');
+
+        // التصفح
+        $perPage = $filters['per_page'] ?? 15;
+
+        $requests = $query->paginate($perPage);
+
+        return [
+            'requests' => RequestResource::collection($requests),
+            'pagination' => [
+                'current_page' => $requests->currentPage(),
+                'last_page' => $requests->lastPage(),
+                'per_page' => $requests->perPage(),
+                'total' => $requests->total(),
             ],
         ];
     }

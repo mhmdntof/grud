@@ -28,6 +28,12 @@ class ProductSupplierSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        // ← الجديد: ربط المنتج بالمورد
+        $product->suppliers()->attach($supplier->id, [
+            'is_primary' => true,
+            'notes' => 'المورد الأساسي',
+        ]);
+
         echo "Product ID: " . $product->id . "\n";
         echo "Supplier ID: " . $supplier->id . "\n";
     }

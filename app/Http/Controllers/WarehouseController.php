@@ -69,6 +69,7 @@ class WarehouseController extends Controller
         ], 'Alerts retrieved successfully');
     }
 
+    //عرض ال Products
         public function index(Request $request): JsonResponse
     {
         $filters = $request->only([
@@ -83,6 +84,22 @@ class WarehouseController extends Controller
         $result = $this->warehouseService->getProducts($filters);
 
         return $this->sendResponse($result, 'Products retrieved successfully');
+    }
+
+    //عرض طلبات الاقسام
+        public function requests(Request $request): JsonResponse
+    {
+        $filters = $request->only([
+            'status',
+            'department_id',
+            'type',
+            'product_id',
+            'per_page'
+        ]);
+
+        $result = $this->warehouseService->getRequests($filters);
+
+        return $this->sendResponse($result, 'Requests retrieved successfully');
     }
 
 }
