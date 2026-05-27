@@ -152,4 +152,67 @@ class WarehouseService
             ];
         });
     }
+
+        public function getProducts(array $filters = []): array
+    {
+        $query = Product::query()
+            ->with([
+                'batches' => function ($q) {
+                    $q->where('quantity', '>', 0)
+                      ->orderBy('expire_date', 'asc');
+                },
+                'suppliers'
+            ]);
+
+        // البحث بالاسم أو الكود
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        // التصفية حسب النوع
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        // التصفية حسب الحالة
+        if (!empty($filters['alert'])) {
+            switch ($filters['alert']) {
+                case 'low_stock':
+                    $query->whereColumn('total_quantity', '<=', 'minimum_stock')
+                          ->where('minimum_stock', '>', 0);
+                    break;
+                case 'out_of_stock':
+                    $query->where('total_quantity', 0);
+                    break;
+            }
+        }
+
+        // الترتيب
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = $filters['sort_order'] ?? 'desc';
+        $allowedSorts = ['name', 'total_quantity', 'created_at', 'expire_date'];
+
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        // التصفح
+        $perPage = $filters['per_page'] ?? 15;
+
+        $products = $query->paginate($perPage);
+
+        return [
+            'products' => ProductResource::collection($products),
+            'pagination' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ],
+        ];
+    }
 }

@@ -78,7 +78,8 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
         Route::post('/stock-in', [WarehouseController::class, 'stockIn']);
         Route::post('/stock-out', [WarehouseController::class, 'stockOut']);
         Route::post('/damage', [WarehouseController::class, 'damage']);
-        Route::post('/alerts', [WarehouseController::class, 'alerts']);
+        Route::get('/alerts', [WarehouseController::class, 'alerts']);
+        Route::get('/products', [WarehouseController::class, 'index']);
     });
 
 

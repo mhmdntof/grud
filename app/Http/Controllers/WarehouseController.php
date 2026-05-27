@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StockInRequest;
 use App\Http\Requests\StockOutRequest;
 use App\Http\Requests\DamageRequest;
+use Illuminate\Http\Request;
 
 use App\Http\Resources\BatchResource;
 use App\Http\Resources\ProductResource;
@@ -66,6 +67,22 @@ class WarehouseController extends Controller
             'low_stock' => ProductResource::collection($lowStock),
             'expiring_soon' => BatchResource::collection($expiringSoon),
         ], 'Alerts retrieved successfully');
+    }
+
+        public function index(Request $request): JsonResponse
+    {
+        $filters = $request->only([
+            'search',
+            'type',
+            'alert',
+            'sort_by',
+            'sort_order',
+            'per_page'
+        ]);
+
+        $result = $this->warehouseService->getProducts($filters);
+
+        return $this->sendResponse($result, 'Products retrieved successfully');
     }
 
 }
