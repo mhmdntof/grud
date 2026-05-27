@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\WarehouseController;
+
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -14,7 +16,7 @@ Route::get('/user', function (Request $request) {
 
 
 
-//قسم الادمن 
+//قسم الادمن
 
 
 Route::middleware([
@@ -29,7 +31,7 @@ Route::post('/create-hospital-manager', [AuthController::class, 'createHospitalM
 
 
 
-//قسم مدير المشفى 
+//قسم مدير المشفى
 
 
 Route::middleware([
@@ -69,7 +71,21 @@ Route::get('/test-session', function () {
 
 
 
-//قسم عام 
+// Warehouse Manager Routes
+Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
+    ->prefix('warehouse')
+    ->group(function () {
+        Route::post('/stock-in', [WarehouseController::class, 'stockIn']);
+        Route::post('/stock-out', [WarehouseController::class, 'stockOut']);
+        Route::post('/damage', [WarehouseController::class, 'damage']);
+        Route::post('/alerts', [WarehouseController::class, 'alerts']);
+    });
+
+
+
+
+
+//قسم عام
 
 Route::post('/login', [AuthController::class, 'login']);
 //Route::post('/login-web', [AuthController::class, 'loginWeb']);
@@ -78,7 +94,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/test', function () {
     return 'IT WORKS';
 });
-    
+
 
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
