@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\DepartmentHeadController;
 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -191,3 +192,15 @@ Route::get('/test-email', function () {
 Route::get('/test-resend-key', function () {
     return env('RESEND_API_KEY');
 });
+
+
+
+
+// ─── Department Head ───
+Route::middleware(['auth:sanctum', 'role:department_head'])
+    ->prefix('department-head')
+    ->group(function () {
+        Route::post('/requests', [DepartmentHeadController::class, 'store']);
+        Route::get('/requests', [DepartmentHeadController::class, 'index']);
+        Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
+    });

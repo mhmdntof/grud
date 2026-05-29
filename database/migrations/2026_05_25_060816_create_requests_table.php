@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('approved_quantity')->nullable();
             $table->integer('delivered_quantity')->nullable();
             $table->enum('type', ['normal', 'recurring', 'urgent'])->default('normal');
-            $table->enum('status', ['pending', 'approved', 'rejected', 'in_progress', 'ready', 'delivered'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected', 'in_progress', 'ready', 'delivered','cancelled'])->default('pending');
             $table->text('rejection_reason')->nullable();
             $table->date('needed_by')->nullable();
             $table->enum('recurring_frequency', ['daily', 'weekly', 'monthly'])->nullable();
