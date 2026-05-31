@@ -10,7 +10,6 @@ use App\Models\Product;
 use App\Models\Request;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
-
 class WarehouseService
 {
     public function stockIn(array $data, int $userId): array
@@ -218,7 +217,7 @@ class WarehouseService
     }
 
     //عرض طلبات الاقسام
-        public function getRequests(array $filters = []): array
+    public function getRequests(array $filters = []): array
     {
         $query = \App\Models\Request::query()
             ->with([
@@ -263,6 +262,82 @@ class WarehouseService
                 'last_page' => $requests->lastPage(),
                 'per_page' => $requests->perPage(),
                 'total' => $requests->total(),
+            ],
+        ];
+    }
+
+    public function approveRequest(int $requestId, int $userId): array
+    {
+        return DB::transaction(function () use ($requestId, $userId) {
+            $request = Request::lockForUpdate()->findOrFail($requestId);
+
+            // التحقق من أن الطلب معلق
+            if ($request->status !== 'pending') {
+                throw new \Exception('الطلب يجب أن يكون معلقاً للموافقة عليه');
+            }
+
+            // التحقق من توفر المخزون (القبول كامل أو لا شيء)
+            $product = Product::lockForUpdate()->findOrFail($request->product_id);
+
+            if ($product->total_quantity < $request->requested_quantity) {
+                throw new \Exception(
+                    'المخزون غير كافٍ. المتوفر: ' . $product->total_quantity .
+                    ' والمطلوب: ' . $request->requested_quantity
+                );
+            }
+
+            // الموافقة على الطلب
+            $request->update([
+                'status' => 'approved',
+                'approved_quantity' => $request->requested_quantity,
+            ]);
+
+            return [
+                'request' => [
+                    'id' => $request->id,
+                    'status' => $request->status,
+                    'approved_quantity' => $request->approved_quantity,
+                    'product' => [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'available_quantity' => $product->total_quantity,
+                    ],
+                    'department' => [
+                        'id' => $request->department->id,
+                        'name' => $request->department->name,
+                    ],
+                ],
+            ];
+        });
+    }
+
+    public function rejectRequest(int $requestId, int $userId, string $reason): array
+    {
+        $request = Request::findOrFail($requestId);
+
+        // التحقق من أن الطلب معلق
+        if ($request->status !== 'pending') {
+            throw new \Exception('الطلب يجب أن يكون معلقاً للرفض');
+        }
+
+        $request->update([
+            'status' => 'rejected',
+            'rejection_reason' => $reason,
+        ]);
+
+        return [
+            'request' => [
+                'id' => $request->id,
+                'status' => $request->status,
+                'rejection_reason' => $request->rejection_reason,
+                'product' => [
+                    'id' => $request->product->id,
+                    'name' => $request->product->name,
+                ],
+                'department' => [
+                    'id' => $request->department->id,
+                    'name' => $request->department->name,
+                ],
             ],
         ];
     }

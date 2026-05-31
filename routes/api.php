@@ -82,6 +82,9 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
         Route::get('/alerts', [WarehouseController::class, 'alerts']);
         Route::get('/products', [WarehouseController::class, 'index']);
         Route::get('/requests', [WarehouseController::class, 'requests']);
+        // جديد: قبول/رفض الطلبات
+        Route::post('/requests/approve', [WarehouseController::class, 'approve']);
+        Route::post('/requests/reject', [WarehouseController::class, 'reject']);
     });
 
 

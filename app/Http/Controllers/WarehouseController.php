@@ -12,7 +12,8 @@ use App\Http\Resources\ProductResource;
 
 use App\Models\Batch;
 use App\Models\Product;
-
+use App\Http\Requests\Warehouse\ApproveRequest;
+use App\Http\Requests\Warehouse\RejectRequest;
 use App\Services\WarehouseService;
 use Illuminate\Http\JsonResponse;
 
@@ -100,6 +101,27 @@ class WarehouseController extends Controller
         $result = $this->warehouseService->getRequests($filters);
 
         return $this->sendResponse($result, 'Requests retrieved successfully');
+    }
+
+    public function approve(ApproveRequest $request): JsonResponse
+    {
+        $result = $this->warehouseService->approveRequest(
+            $request->validated()['request_id'],
+            $request->user()->id
+        );
+
+        return $this->sendResponse($result, 'Request approved successfully');
+    }
+
+    public function reject(RejectRequest $request): JsonResponse
+    {
+        $result = $this->warehouseService->rejectRequest(
+            $request->validated()['request_id'],
+            $request->user()->id,
+            $request->validated()['rejection_reason']
+        );
+
+        return $this->sendResponse($result, 'Request rejected successfully');
     }
 
 }
