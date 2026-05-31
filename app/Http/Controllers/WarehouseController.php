@@ -15,6 +15,7 @@ use App\Models\Product;
 use App\Http\Requests\Warehouse\ApproveRequest;
 use App\Http\Requests\Warehouse\RejectRequest;
 use App\Http\Requests\Warehouse\PrepareRequest;
+use App\Http\Requests\Warehouse\ReadyRequest;
 
 use App\Services\WarehouseService;
 use Illuminate\Http\JsonResponse;
@@ -134,5 +135,15 @@ class WarehouseController extends Controller
         );
 
         return $this->sendResponse($result, 'Request moved to in_progress successfully');
+    }
+
+        public function ready(ReadyRequest $request): JsonResponse
+    {
+        $result = $this->warehouseService->readyRequest(
+            $request->validated()['request_id'],
+            $request->user()->id
+        );
+
+        return $this->sendResponse($result, 'Request moved to ready successfully');
     }
 }

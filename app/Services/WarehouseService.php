@@ -368,4 +368,31 @@ class WarehouseService
             ],
         ];
     }
+
+        public function readyRequest(int $requestId, int $userId): array
+    {
+        $request = Request::lockForUpdate()->findOrFail($requestId);
+
+        // التحقق من أن الطلب قيد التنفيذ
+        if ($request->status !== 'in_progress') {
+            throw new \Exception('الطلب يجب أن يكون قيد التنفيذ أولاً');
+        }
+
+        $request->update(['status' => 'ready']);
+
+        return [
+            'request' => [
+                'id' => $request->id,
+                'status' => $request->status,
+                'product' => [
+                    'id' => $request->product->id,
+                    'name' => $request->product->name,
+                ],
+                'department' => [
+                    'id' => $request->department->id,
+                    'name' => $request->department->name,
+                ],
+            ],
+        ];
+    }
 }

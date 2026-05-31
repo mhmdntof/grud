@@ -87,6 +87,8 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
         Route::post('/requests/reject', [WarehouseController::class, 'reject']);
         // تحضير الطلب in_progress
         Route::post('/requests/prepare', [WarehouseController::class, 'prepare']);
+        // الطلب جاهز ready
+        Route::post('/requests/ready', [WarehouseController::class, 'ready']);
     });
 
 
