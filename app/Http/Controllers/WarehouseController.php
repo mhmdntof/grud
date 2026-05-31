@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StockInRequest;
-use App\Http\Requests\StockOutRequest;
-use App\Http\Requests\DamageRequest;
+use App\Http\Requests\WareHouse\StockInRequest;
+use App\Http\Requests\WareHouse\StockOutRequest;
+use App\Http\Requests\WareHouse\DamageRequest;
 use Illuminate\Http\Request;
 
 use App\Http\Resources\BatchResource;
@@ -12,6 +12,7 @@ use App\Http\Resources\ProductResource;
 
 use App\Models\Batch;
 use App\Models\Product;
+
 use App\Http\Requests\Warehouse\ApproveRequest;
 use App\Http\Requests\Warehouse\RejectRequest;
 use App\Http\Requests\Warehouse\PrepareRequest;
