@@ -7,6 +7,9 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\RequestOrderController;
+
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -60,9 +63,19 @@ Route::middleware([
 
 
 
+//قسم رئيس القسم 
+
+
+Route::post( '/request-items', [RequestOrderController::class, 'store']
+    );
+
+
+
+
 
 
 //قسم عام 
+
 
 Route::post('/login', [AuthController::class, 'login']);
 //Route::post('/login-web', [AuthController::class, 'loginWeb']);
