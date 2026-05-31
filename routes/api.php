@@ -71,7 +71,7 @@ Route::middleware([
     'role:department_manager'
 ])->group(function () {
 
-    Route::post('/requests', [
+    Route::post('/request-items', [
         RequestOrderController::class,
         'store'
     ]);
