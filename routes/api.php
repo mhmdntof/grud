@@ -66,8 +66,17 @@ Route::middleware([
 //قسم رئيس القسم 
 
 
-Route::post( '/request-items', [RequestOrderController::class, 'store']
-    );
+Route::middleware([
+    'auth:sanctum',
+    'role:department_manager'
+])->group(function () {
+
+    Route::post('/requests', [
+        RequestOrderController::class,
+        'store'
+    ]);
+
+});
 
 
 
