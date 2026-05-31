@@ -85,6 +85,8 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
         // جديد: قبول/رفض الطلبات
         Route::post('/requests/approve', [WarehouseController::class, 'approve']);
         Route::post('/requests/reject', [WarehouseController::class, 'reject']);
+        // تحضير الطلب in_progress
+        Route::post('/requests/prepare', [WarehouseController::class, 'prepare']);
     });
 
 

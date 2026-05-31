@@ -341,4 +341,31 @@ class WarehouseService
             ],
         ];
     }
+
+        public function prepareRequest(int $requestId, int $userId): array
+    {
+        $request = Request::lockForUpdate()->findOrFail($requestId);
+
+        // التحقق من أن الطلب معتمد
+        if ($request->status !== 'approved') {
+            throw new \Exception('الطلب يجب أن يكون معتمداً أولاً');
+        }
+
+        $request->update(['status' => 'in_progress']);
+
+        return [
+            'request' => [
+                'id' => $request->id,
+                'status' => $request->status,
+                'product' => [
+                    'id' => $request->product->id,
+                    'name' => $request->product->name,
+                ],
+                'department' => [
+                    'id' => $request->department->id,
+                    'name' => $request->department->name,
+                ],
+            ],
+        ];
+    }
 }
