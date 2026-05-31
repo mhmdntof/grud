@@ -68,7 +68,7 @@ Route::middleware([
 
 Route::middleware([
     'auth:sanctum',
-    'role:department_manager'
+    'role:department_head'
 ])->group(function () {
 
     Route::post('/request-items', [
