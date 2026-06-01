@@ -5,6 +5,8 @@ namespace App\Services\Requests;
 use App\Models\RequestOrder;
 use App\Models\User;
 use App\Models\RequestOrderItem;
+use App\Models\DepartmentProduct;
+use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 
 class RequestOrderService
@@ -70,44 +72,94 @@ public function warehouseApproval(
     array $data
 )
 {
-    $requestOrder = RequestOrder::with('items.product')
-        ->findOrFail($requestId);
+    return DB::transaction(function () use ($requestId, $data) {
 
-    // لازم المدير يوافق أولًا
-    if ($requestOrder->manager_status !== 'approved') {
+        $requestOrder = RequestOrder::with('items')
+            ->findOrFail($requestId);
 
-        throw new \Exception(
-            'Hospital manager approval required first'
-        );
-    }
+        if ($requestOrder->manager_status !== 'approved') {
 
-    // منع إعادة المعالجة
-    if ($requestOrder->warehouse_status !== 'pending') {
+            throw new \Exception(
+                'Hospital manager approval required first'
+            );
+        }
 
-        throw new \Exception(
-            'Request already processed'
-        );
-    }
+        if ($requestOrder->warehouse_status !== 'pending') {
 
-    // إذا رفض
-    if ($data['status'] === 'rejected') {
+            throw new \Exception(
+                'Request already processed'
+            );
+        }
 
-        $requestOrder->warehouse_status = 'rejected';
+        // حالة الرفض
+        if ($data['status'] === 'rejected') {
 
-        $requestOrder->rejection_reason =
-            $data['rejection_reason'];
+            $requestOrder->update([
+                'warehouse_status' => 'rejected',
+                'rejection_reason' => $data['rejection_reason']
+            ]);
 
-        $requestOrder->save();
+            return $requestOrder;
+        }
+
+        // التحقق من جميع المواد أولاً
+        foreach ($requestOrder->items as $item) {
+
+            $product = Product::findOrFail(
+                $item->product_id
+            );
+
+            $remainingQuantity =
+                $product->total_quantity -
+                $item->quantity;
+
+            if (
+                $remainingQuantity <
+                $product->minimum_stock
+            ) {
+
+                throw new \Exception(
+                    "Cannot approve request. Product {$product->name} would fall below minimum stock."
+                );
+            }
+        }
+
+        // تنفيذ النقل
+        foreach ($requestOrder->items as $item) {
+
+            $product = Product::findOrFail(
+                $item->product_id
+            );
+
+            // خصم من المستودع الرئيسي
+            $product->decrement(
+                'total_quantity',
+                $item->quantity
+            );
+
+            // إضافة لمستودع القسم
+            $departmentProduct =
+                DepartmentProduct::firstOrNew([
+                    'department_id' =>
+                        $requestOrder->department_id,
+
+                    'product_id' =>
+                        $item->product_id
+                ]);
+
+            $departmentProduct->quantity =
+                ($departmentProduct->quantity ?? 0)
+                + $item->quantity;
+
+            $departmentProduct->save();
+        }
+
+        $requestOrder->update([
+            'warehouse_status' => 'approved'
+        ]);
 
         return $requestOrder;
-    }
-
-    // إذا وافق
-    $requestOrder->warehouse_status = 'approved';
-
-    $requestOrder->save();
-
-    return $requestOrder;
+    });
 }
 
 
