@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Http\Requests\Requests\CreateRequestOrderRequest;
 use App\Services\Requests\RequestOrderService;
 use App\Http\Requests\Requests\ManagerApprovalRequest;
+use App\Http\Requests\Requests\WarehouseApprovalRequest;
+
+
 class RequestOrderController extends Controller
 {
     protected $requestOrderService;
@@ -52,4 +55,27 @@ public function managerApproval(
         'data' => $order
     ]);
 }
+
+//موافقة المستودع على طلب القسم 
+
+public function warehouseApproval(
+    WarehouseApprovalRequest $request,
+    $id
+)
+{
+    $order = $this->requestOrderService
+        ->warehouseApproval(
+            $id,
+            $request->validated()
+        );
+
+    return response()->json([
+        'message' => 'Request updated successfully',
+        'data' => $order
+    ]);
+}
+
+
+
+
 }

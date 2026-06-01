@@ -64,6 +64,12 @@ Route::middleware([
 
     Route::post('/add-products', [ProductController::class, 'store']);
     Route::post('/add-batch',[ProductController::class,'addBatch']);
+ Route::post(  '/requests/{id}/warehouse-approval',[RequestOrderController::class,'warehouseApproval']
+    );
+
+
+
+
 });
 
 

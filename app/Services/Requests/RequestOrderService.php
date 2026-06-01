@@ -63,6 +63,52 @@ public function managerApproval(
     return $requestOrder;
 }
 
+//موافقة المستودع على طلب القسم 
+
+public function warehouseApproval(
+    int $requestId,
+    array $data
+)
+{
+    $requestOrder = RequestOrder::with('items.product')
+        ->findOrFail($requestId);
+
+    // لازم المدير يوافق أولًا
+    if ($requestOrder->manager_status !== 'approved') {
+
+        throw new \Exception(
+            'Hospital manager approval required first'
+        );
+    }
+
+    // منع إعادة المعالجة
+    if ($requestOrder->warehouse_status !== 'pending') {
+
+        throw new \Exception(
+            'Request already processed'
+        );
+    }
+
+    // إذا رفض
+    if ($data['status'] === 'rejected') {
+
+        $requestOrder->warehouse_status = 'rejected';
+
+        $requestOrder->rejection_reason =
+            $data['rejection_reason'];
+
+        $requestOrder->save();
+
+        return $requestOrder;
+    }
+
+    // إذا وافق
+    $requestOrder->warehouse_status = 'approved';
+
+    $requestOrder->save();
+
+    return $requestOrder;
+}
 
 
 }
