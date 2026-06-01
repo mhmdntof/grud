@@ -96,6 +96,8 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
         Route::put('/suppliers/{id}', [SupplierController::class, 'update']);
         Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
         Route::post('/suppliers/{id}/restore', [SupplierController::class, 'restore']);
+        //  أرشيف الحركات
+        Route::get('/movements', [WarehouseController::class, 'movements']);
     });
 
 

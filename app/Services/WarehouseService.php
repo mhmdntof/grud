@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Http\Resources\BatchResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\RequestResource;
+use App\Http\Resources\StockMovementResource;
+
+
 use App\Models\Batch;
 use App\Models\Product;
 use App\Models\Request;
@@ -415,5 +418,61 @@ class WarehouseService
                 ],
             ];
         });
+    }
+
+    public function getMovements(array $filters = []): array
+    {
+        $query = StockMovement::query()
+            ->with([
+                'user:id,name',
+                'department:id,name',
+                'product:id,name,code,unit',
+                'batch:id,batch_number,expire_date',
+                'request:id,status'
+            ]);
+
+        // تصفية حسب المنتج
+        if (!empty($filters['product_id'])) {
+            $query->where('product_id', $filters['product_id']);
+        }
+
+        // تصفية حسب القسم
+        if (!empty($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        // تصفية حسب النوع
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        // تصفية حسب المستخدم
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+
+        // تصفية حسب التاريخ
+        if (!empty($filters['from_date'])) {
+            $query->whereDate('created_at', '>=', $filters['from_date']);
+        }
+        if (!empty($filters['to_date'])) {
+            $query->whereDate('created_at', '<=', $filters['to_date']);
+        }
+
+        // الترتيب: الأحدث أولاً
+        $query->orderBy('created_at', 'desc');
+
+        $perPage = $filters['per_page'] ?? 15;
+        $movements = $query->paginate($perPage);
+
+        return [
+            'movements' => StockMovementResource::collection($movements),
+            'pagination' => [
+                'current_page' => $movements->currentPage(),
+                'last_page' => $movements->lastPage(),
+                'per_page' => $movements->perPage(),
+                'total' => $movements->total(),
+            ],
+        ];
     }
 }

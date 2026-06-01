@@ -10,7 +10,7 @@ use App\Http\Requests\Warehouse\ApproveRequest;
 use App\Http\Requests\Warehouse\RejectRequest;
 use App\Http\Requests\Warehouse\PrepareRequest;
 use App\Http\Requests\Warehouse\ReadyRequest;
-
+use App\Http\Requests\Warehouse\MovementFilterRequest;
 
 use App\Http\Resources\BatchResource;
 use App\Http\Resources\ProductResource;
@@ -158,5 +158,13 @@ class WarehouseController extends Controller
         );
 
         return $this->sendResponse($result, 'Request moved to ready successfully');
+    }
+
+    public function movements(MovementFilterRequest $request): JsonResponse
+    {
+        $filters = $request->validated();
+        $result = $this->warehouseService->getMovements($filters);
+
+        return $this->sendResponse($result, 'Movements retrieved successfully');
     }
 }
