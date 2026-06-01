@@ -27,4 +27,42 @@ class RequestOrderService
         ]);
     });
 }
+
+//موافقة مدير المشفى على طلب القسم 
+
+public function managerApproval(
+    int $requestId,
+    array $data
+)
+{
+    $requestOrder = RequestOrder::findOrFail(
+        $requestId
+    );
+
+    if (
+        $requestOrder->manager_status !== 'pending'
+    ) {
+        throw new \Exception(
+            'Request already processed'
+        );
+    }
+
+    $requestOrder->manager_status =
+        $data['status'];
+
+    if (
+        $data['status'] === 'rejected'
+    ) {
+
+        $requestOrder->rejection_reason =
+            $data['rejection_reason'];
+    }
+
+    $requestOrder->save();
+
+    return $requestOrder;
+}
+
+
+
 }

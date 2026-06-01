@@ -43,6 +43,11 @@ Route::middleware([
 Route::post('/create-employee', [AuthController::class, 'createEmployee']);
  Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/add-products', [ProductController::class, 'store']);
+Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'managerApproval']
+    );
+
+
+
 
  });
 
