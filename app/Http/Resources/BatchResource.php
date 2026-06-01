@@ -13,7 +13,7 @@ class BatchResource extends JsonResource
             'id' => $this->id,
             'batch_number' => $this->batch_number,
             'quantity' => $this->quantity,
-            'expire_date' => $this->expire_date?->format('Y-m-d'),
+            'expire_date' => $this->expire_date?->format('Y-m-d'),  // ✅ null-safe
             'purchase_price' => (float) $this->purchase_price,
             'notes' => $this->notes,
             'product' => new ProductResource($this->whenLoaded('product')),

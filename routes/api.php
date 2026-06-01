@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\DepartmentHeadController;
-
+use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -89,6 +89,13 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
         Route::post('/requests/prepare', [WarehouseController::class, 'prepare']);
         // الطلب جاهز ready
         Route::post('/requests/ready', [WarehouseController::class, 'ready']);
+        //ال CRUD Suppliers
+        Route::get('/suppliers', [SupplierController::class, 'index']);
+        Route::get('/suppliers/{id}', [SupplierController::class, 'show']);
+        Route::post('/suppliers', [SupplierController::class, 'store']);
+        Route::put('/suppliers/{id}', [SupplierController::class, 'update']);
+        Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
+        Route::post('/suppliers/{id}/restore', [SupplierController::class, 'restore']);
     });
 
 

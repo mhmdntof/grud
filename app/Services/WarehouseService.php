@@ -15,17 +15,19 @@ class WarehouseService
     public function stockIn(array $data, int $userId): array
     {
         return DB::transaction(function () use ($data, $userId) {
+            // ✅ أضفنا lockForUpdate()
+            $product = Product::lockForUpdate()->find($data['product_id']);
+
             $batch = Batch::create([
                 'product_id' => $data['product_id'],
                 'supplier_id' => $data['supplier_id'],
                 'batch_number' => $data['batch_number'],
                 'quantity' => $data['quantity'],
-                'expire_date' => $data['expire_date'],
+                'expire_date' => $data['expire_date']?? null,
                 'purchase_price' => $data['purchase_price'] ?? null,
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            $product = Product::find($data['product_id']);
             $product->increment('total_quantity', $data['quantity']);
 
             StockMovement::create([
@@ -45,80 +47,92 @@ class WarehouseService
     }
 
     public function stockOut(array $data, int $userId): array
-    {
-        return DB::transaction(function () use ($data, $userId) {
-            $product = Product::lockForUpdate()->findOrFail($data['product_id']);
+{
+    return DB::transaction(function () use ($data, $userId) {
+        $product = Product::lockForUpdate()->findOrFail($data['product_id']);
 
-            if ($product->total_quantity < $data['quantity']) {
-                throw new \Exception('الكمية المطلوبة غير متوفرة في المخزون');
+        if ($product->total_quantity < $data['quantity']) {
+            throw new \Exception('الكمية المطلوبة غير متوفرة في المخزون');
+        }
+
+        $requestModel = null;
+        if (!empty($data['request_id'])) {
+            $requestModel = Request::lockForUpdate()->findOrFail($data['request_id']);
+
+            if ($requestModel->product_id != $data['product_id']) {
+                throw new \Exception('المنتج لا يتطابق مع الطلب');
             }
 
-            // إذا كان مرتبط بطلب → تحقق + تحديث
-            $requestModel = null;
-            if (!empty($data['request_id'])) {
-                $requestModel = Request::lockForUpdate()->findOrFail($data['request_id']);
-
-                if ($requestModel->product_id != $data['product_id']) {
-                    throw new \Exception('المنتج لا يتطابق مع الطلب');
-                }
-
-                if ($requestModel->status !== 'approved') {
-                    throw new \Exception('الطلب يجب أن يكون معتمداً أولاً');
-                }
+            if ($requestModel->status !== 'ready') {
+                throw new \Exception('الطلب يجب أن يكون بstatus "جاهز" (ready) أولاً');
             }
 
-            // FIFO: جلب الدفعات حسب أقرب تاريخ صلاحية
-            $batches = Batch::where('product_id', $data['product_id'])
-                ->where('quantity', '>', 0)
-                ->orderBy('expire_date', 'asc')
-                ->lockForUpdate()
-                ->get();
-
-            $remaining = $data['quantity'];
-            $movements = [];
-
-            foreach ($batches as $batch) {
-                if ($remaining <= 0) {
-                    break;
-                }
-
-                $take = min($remaining, $batch->quantity);
-
-                $batch->decrement('quantity', $take);
-
-                $movement = StockMovement::create([
-                    'user_id' => $userId,
-                    'department_id' => $data['department_id'],
-                    'product_id' => $data['product_id'],
-                    'batch_id' => $batch->id,
-                    'request_id' => $data['request_id'] ?? null,
-                    'type' => 'out',
-                    'quantity' => $take,
-                    'notes' => $data['notes'] ?? null,
-                ]);
-
-                $movements[] = $movement;
-                $remaining -= $take;
+            // ✅ التحقق: لا تسليم جزئي (بناءً على ردك السابق)
+            if ($data['quantity'] != $requestModel->approved_quantity) {
+                throw new \Exception(
+                    'يجب تسليم الكمية المعتمدة بالكامل (' . $requestModel->approved_quantity . ')'
+                );
             }
+        }
 
-            $product->decrement('total_quantity', $data['quantity']);
+        // FIFO
+        $batches = Batch::where('product_id', $data['product_id'])
+            ->where('quantity', '>', 0)
+            ->orderBy('expire_date', 'asc')
+            ->lockForUpdate()
+            ->get();
 
-            // تحديث الطلب إذا كان مرتبطاً
-            if ($requestModel) {
-                $requestModel->update([
-                    'delivered_quantity' => $data['quantity'],
-                    'status' => 'delivered',
-                ]);
-            }
+        $remaining = $data['quantity'];
+        $movements = [];
 
-            return [
-                'product' => new ProductResource($product->fresh()),
-                'movements' => $movements,
-                'total_deducted' => $data['quantity'],
-                'request' => $requestModel,
-            ];
-        });
-    }
+        foreach ($batches as $batch) {
+            if ($remaining <= 0) break;
+            $take = min($remaining, $batch->quantity);
+            $batch->decrement('quantity', $take);
+
+            $movement = StockMovement::create([
+                'user_id' => $userId,
+                'department_id' => $data['department_id'],
+                'product_id' => $data['product_id'],
+                'batch_id' => $batch->id,
+                'request_id' => $data['request_id'] ?? null,
+                'type' => 'out',
+                'quantity' => $take,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            $movements[] = $movement;
+            $remaining -= $take;
+        }
+
+        $product->decrement('total_quantity', $data['quantity']);
+
+        // ✅ الجديد: تحديث مخزون القسم
+        if (!empty($data['department_id'])) {
+            $deptProduct = \App\Models\DepartmentProduct::firstOrNew([
+                'department_id' => $data['department_id'],
+                'product_id' => $data['product_id'],
+            ]);
+            $currentQty = $deptProduct->quantity ?? 0;
+            $deptProduct->quantity = $currentQty + $data['quantity'];
+            $deptProduct->save();
+        }
+
+        if ($requestModel) {
+            $requestModel->update([
+                'delivered_quantity' => $data['quantity'],
+                'status' => 'delivered',
+            ]);
+        }
+
+        return [
+            'product' => new ProductResource($product->fresh()),
+            'movements' => $movements,
+            'total_deducted' => $data['quantity'],
+            'request' => $requestModel,
+        ];
+    });
+}
 
     public function damage(array $data, int $userId): array
     {
@@ -194,7 +208,7 @@ class WarehouseService
         // الترتيب
         $sortBy = $filters['sort_by'] ?? 'created_at';
         $sortOrder = $filters['sort_order'] ?? 'desc';
-        $allowedSorts = ['name', 'total_quantity', 'created_at', 'expire_date'];
+        $allowedSorts = ['name', 'total_quantity', 'created_at'];
 
         if (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortOrder);
@@ -313,86 +327,93 @@ class WarehouseService
 
     public function rejectRequest(int $requestId, int $userId, string $reason): array
     {
-        $request = Request::findOrFail($requestId);
+        return DB::transaction(function () use ($requestId, $userId, $reason) {
+            // ✅ أقفل الصف: أي عملية أخرى تنتظر
+            $request = Request::lockForUpdate()->findOrFail($requestId);
 
-        // التحقق من أن الطلب معلق
-        if ($request->status !== 'pending') {
-            throw new \Exception('الطلب يجب أن يكون معلقاً للرفض');
-        }
+            // التحقق من أنه لا يزال معلقاً (بعد الانتظار)
+            if ($request->status !== 'pending') {
+                throw new \Exception('الطلب يجب أن يكون معلقاً للرفض');
+            }
 
-        $request->update([
-            'status' => 'rejected',
-            'rejection_reason' => $reason,
-        ]);
+            $request->update([
+                'status' => 'rejected',
+                'rejection_reason' => $reason,
+            ]);
 
-        return [
-            'request' => [
-                'id' => $request->id,
-                'status' => $request->status,
-                'rejection_reason' => $request->rejection_reason,
-                'product' => [
-                    'id' => $request->product->id,
-                    'name' => $request->product->name,
+            return [
+                'request' => [
+                    'id' => $request->id,
+                    'status' => $request->status,
+                    'rejection_reason' => $request->rejection_reason,
+                    'product' => [
+                        'id' => $request->product->id,
+                        'name' => $request->product->name,
+                    ],
+                    'department' => [
+                        'id' => $request->department->id,
+                        'name' => $request->department->name,
+                    ],
                 ],
-                'department' => [
-                    'id' => $request->department->id,
-                    'name' => $request->department->name,
-                ],
-            ],
-        ];
+            ];
+        });
     }
 
-        public function prepareRequest(int $requestId, int $userId): array
+    public function prepareRequest(int $requestId, int $userId): array
     {
-        $request = Request::lockForUpdate()->findOrFail($requestId);
+        return DB::transaction(function () use ($requestId, $userId) {
+            $request = Request::lockForUpdate()->findOrFail($requestId);
 
-        // التحقق من أن الطلب معتمد
-        if ($request->status !== 'approved') {
-            throw new \Exception('الطلب يجب أن يكون معتمداً أولاً');
-        }
+            if ($request->status !== 'approved') {
+                throw new \Exception('الطلب يجب أن يكون معتمداً أولاً');
+            }
 
-        $request->update(['status' => 'in_progress']);
+            $request->update(['status' => 'in_progress']);
 
-        return [
-            'request' => [
-                'id' => $request->id,
-                'status' => $request->status,
-                'product' => [
-                    'id' => $request->product->id,
-                    'name' => $request->product->name,
+            return [
+                'request' => [
+                    'id' => $request->id,
+                    'status' => $request->status,
+                    'product' => [
+                        'id' => $request->product->id,
+                        'name' => $request->product->name,
+                    ],
+                    'department' => [
+                        'id' => $request->department->id,
+                        'name' => $request->department->name,
+                    ],
                 ],
-                'department' => [
-                    'id' => $request->department->id,
-                    'name' => $request->department->name,
-                ],
-            ],
-        ];
+            ];
+        });
     }
 
-        public function readyRequest(int $requestId, int $userId): array
+    public function readyRequest(int $requestId, int $userId): array
     {
-        $request = Request::lockForUpdate()->findOrFail($requestId);
+        return DB::transaction(function () use ($requestId, $userId) {
+        // ✅ قفل الصف: أي عملية أخرى تنتظر حتى أُنهي
+            $request = Request::lockForUpdate()->findOrFail($requestId);
 
-        // التحقق من أن الطلب قيد التنفيذ
-        if ($request->status !== 'in_progress') {
-            throw new \Exception('الطلب يجب أن يكون قيد التنفيذ أولاً');
-        }
+            // ✅ تحقق مُجدّد بعد الانتظار
+            if ($request->status !== 'in_progress') {
+                throw new \Exception('الطلب يجب أن يكون قيد التنفيذ أولاً');
+            }
 
-        $request->update(['status' => 'ready']);
+            $request->update(['status' => 'ready']);
 
-        return [
-            'request' => [
-                'id' => $request->id,
-                'status' => $request->status,
-                'product' => [
-                    'id' => $request->product->id,
-                    'name' => $request->product->name,
+            return [
+                'request' => [
+                    'id' => $request->id,
+                    'status' => $request->status,
+                    'product' => [
+                        'id' => $request->product->id,
+                        'name' => $request->product->name,
+                    ],
+                    'department' => [
+                        'id' => $request->department->id,
+                        'name' => $request->department->name,
+                    ],
                 ],
-                'department' => [
-                    'id' => $request->department->id,
-                    'name' => $request->department->name,
-                ],
-            ],
-        ];
+            ];
+        });
     }
 }

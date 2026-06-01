@@ -93,40 +93,43 @@ class DepartmentHeadService
 
     public function cancelRequest(int $requestId, int $userId): array
     {
-        $request = Request::where('id', $requestId)
-            ->where('user_id', $userId)
-            ->first();
+        return DB::transaction(function () use ($requestId, $userId) {
+            // ✅ قفل الصف
+            $request = Request::lockForUpdate()
+                ->where('id', $requestId)
+                ->where('user_id', $userId)
+                ->first();
 
-        if (!$request) {
-            throw new \Exception('الطلب غير موجود أو لا تملك صلاحية الوصول إليه');
-        }
+            if (!$request) {
+                throw new \Exception('الطلب غير موجود أو لا تملك صلاحية الوصول إليه');
+            }
 
-        if (!in_array($request->status, ['pending', 'approved'])) {
-            throw new \Exception('لا يمكن إلغاء طلب تمت معالجته');
-        }
+            if (!in_array($request->status, ['pending', 'approved'])) {
+                throw new \Exception('لا يمكن إلغاء طلب تمت معالجته');
+            }
 
-        $request->update(['status' => 'cancelled']);
+            $request->update(['status' => 'cancelled']);
 
-        // إعادة تحميل Relations بعد التحديث
-        $request->load(['product:id,name,code,unit', 'department:id,name']);
+            $request->load(['product:id,name,code,unit', 'department:id,name']);
 
-        return [
-            'request' => [
-                'id' => $request->id,
-                'type' => $request->type,
-                'status' => $request->status,
-                'requested_quantity' => $request->requested_quantity,
-                'product' => [
-                    'id' => $request->product->id,
-                    'name' => $request->product->name,
-                    'code' => $request->product->code,
-                    'unit' => $request->product->unit,
+            return [
+                'request' => [
+                    'id' => $request->id,
+                    'type' => $request->type,
+                    'status' => $request->status,
+                    'requested_quantity' => $request->requested_quantity,
+                    'product' => [
+                        'id' => $request->product->id,
+                        'name' => $request->product->name,
+                        'code' => $request->product->code,
+                        'unit' => $request->product->unit,
+                    ],
+                    'department' => [
+                        'id' => $request->department->id,
+                        'name' => $request->department->name,
+                    ],
                 ],
-                'department' => [
-                    'id' => $request->department->id,
-                    'name' => $request->department->name,
-                ],
-            ],
-        ];
+            ];
+        });
     }
 }
