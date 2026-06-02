@@ -47,8 +47,16 @@ Route::post('/create-employee', [AuthController::class, 'createEmployee']);
  Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/add-products', [ProductController::class, 'store']);
 Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'managerApproval']
+);
+  Route::get(
+        '/request-orders/pending/normal',
+        [RequestOrderController::class, 'pendingNormal']
     );
 
+    Route::get(
+        '/request-orders/pending/urgent',
+        [RequestOrderController::class, 'pendingUrgent']
+    );
 
 
 
@@ -69,6 +77,20 @@ Route::middleware([
     Route::post('/add-batch',[ProductController::class,'addBatch']);
  Route::post(  '/requests/{id}/warehouse-approval',[RequestOrderController::class,'warehouseApproval']
     );
+
+
+ Route::get(
+        '/warehouse-requests/pending/normal',
+        [RequestOrderController::class,
+        'warehousePendingNormal']
+    );
+
+    Route::get(
+        '/warehouse-requests/pending/urgent',
+        [RequestOrderController::class,
+        'warehousePendingUrgent']
+    );
+
 });
 
 // Warehouse Manager Routes
