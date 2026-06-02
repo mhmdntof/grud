@@ -43,6 +43,7 @@ class Batch extends Model
         'quantity',
         'expire_date',
         'purchase_price',
+        'request-type'
     ];
 
     public function product()
