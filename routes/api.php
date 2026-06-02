@@ -101,10 +101,7 @@ Route::post('/login', [AuthController::class, 'login']);
 //Route::post('/login-web', [AuthController::class, 'loginWeb']);
 
 
-Route::get('/test', function () {
-    return 'IT WORKS';
-});
-    
+
 
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
