@@ -88,7 +88,7 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
 
 //قسم عام
 
-main
+
 
 
 
@@ -101,8 +101,7 @@ main
 
 
   Route::get('/mail-test', function () {
-=======
- main
+
 
 
 
@@ -157,5 +156,4 @@ Route::middleware(['auth:sanctum', 'role:department_head'])
         Route::get('/requests', [DepartmentHeadController::class, 'index']);
         Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
     });
-=======
- main
+
