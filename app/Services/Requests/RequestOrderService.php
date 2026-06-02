@@ -162,5 +162,34 @@ public function warehouseApproval(
     });
 }
 
+//طلبات الادمن المستعجلة 
+public function getPendingUrgentRequests()
+{
+    return RequestOrder::with([
+        'department',
+        'requester',
+        'items.product'
+    ])
+    ->where('manager_status', 'pending')
+    ->where('request_type', 'urgent')
+    ->latest()
+    ->get();
+}
+
+//طلبات الادمن العادية
+
+public function getPendingNormalRequests()
+{
+    return RequestOrder::with([
+        'department',
+        'requester',
+        'items.product'
+    ])
+    ->where('manager_status', 'pending')
+    ->where('request_type', 'normal')
+    ->latest()
+    ->get();
+}
+
 
 }

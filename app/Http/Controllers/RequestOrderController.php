@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\Requests\CreateRequestOrderRequest;
 use App\Services\Requests\RequestOrderService;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Requests\ManagerApprovalRequest;
 use App\Http\Requests\Requests\WarehouseApprovalRequest;
 
@@ -26,7 +27,7 @@ public function store(
 {
     $order = $this->requestOrderService->create(
         $request->validated(),
-        auth()->user()
+          Auth::user()
     );
 
     return response()->json([
@@ -75,7 +76,25 @@ public function warehouseApproval(
     ]);
 }
 
+//طلبات رئيس المشفى المستعجلة 
+
+public function pendingUrgent()
+{
+    return response()->json(
+        $this->requestOrderService
+            ->getPendingUrgentRequests()
+    );
+}
+
+//طلبات رئيس المشفى العادية 
 
 
+public function pendingNormal()
+{
+    return response()->json(
+        $this->requestOrderService
+            ->getPendingNormalRequests()
+    );
+}
 
 }
