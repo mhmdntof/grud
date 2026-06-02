@@ -10,6 +10,7 @@ class RequestOrder extends Model
         'department_id',
         'requested_by',
         'manager_status',
+        'request_type',
         'warehouse_status',
         'rejection_reason'
     ];

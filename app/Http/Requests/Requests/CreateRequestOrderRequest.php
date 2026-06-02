@@ -14,6 +14,8 @@ class CreateRequestOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
+
+        'request_type' => 'required|in:normal,urgent',
             'items' => 'required|array|min:1|max:5',
 
             'items.*.product_id' => 'required|exists:products,id',

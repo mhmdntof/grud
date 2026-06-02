@@ -12,31 +12,33 @@ return new class extends Migration
   public function up(): void
 {
     Schema::create('request_orders', function (Blueprint $table) {
-        $table->id();
 
-        $table->foreignId('department_id')
-            ->constrained()
-            ->onDelete('cascade');
+    $table->id();
 
-        $table->foreignId('requested_by')
-            ->constrained('users')
-            ->onDelete('cascade');
+    $table->foreignId('department_id')
+        ->constrained()
+        ->onDelete('cascade');
 
-        $table->enum('manager_status', [
-            'pending',
-            'approved',
-            'rejected'
-        ])->default('pending');
+    $table->foreignId('requested_by')
+        ->constrained('users')
+        ->onDelete('cascade');
 
-        $table->enum('warehouse_status', [
-            'pending',
-            'approved',
-            'rejected'
-        ])->default('pending');
+    // normal | urgent
+    $table->string('request_type');
 
-        $table->text('rejection_reason')->nullable();
+    // pending | approved | rejected
+    $table->string('manager_status')
+        ->default('pending');
 
-        $table->timestamps();
+    // pending | approved | rejected
+    $table->string('warehouse_status')
+        ->default('pending');
+
+    $table->text('rejection_reason')
+        ->nullable();
+
+    $table->timestamps();
+
     });
 }
 

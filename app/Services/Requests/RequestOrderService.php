@@ -15,11 +15,11 @@ class RequestOrderService
 {
     return DB::transaction(function () use ($data, $user) {
 
-        $requestOrder = RequestOrder::create([
-            'department_id' => $user->department_id,
-            'requested_by' => $user->id,
-        ]);
-
+       $requestOrder = RequestOrder::create([
+    'department_id' => $user->department_id,
+    'requested_by' => $user->id,
+    'request_type' => $data['request_type'],
+]);
         $requestOrder->items()->createMany($data['items']);
 
         return $requestOrder->load([
