@@ -13,7 +13,7 @@ class RequestOrder extends Model
         'request_type',
         'warehouse_status',
         'rejection_reason',
-        'request-type'
+        'request_type'
     ];
 
     public function items()
