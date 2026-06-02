@@ -4,17 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DepartmentProduct extends Model
+class RequestOrderItem extends Model
 {
     protected $fillable = [
-        'department_id',
+        'request_order_id',
         'product_id',
         'quantity'
     ];
 
-    public function department()
+    public function requestOrder()
     {
-        return $this->belongsTo(Department::class);
+        return $this->belongsTo(RequestOrder::class);
     }
 
     public function product()
