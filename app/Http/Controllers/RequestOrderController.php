@@ -97,4 +97,27 @@ public function pendingNormal()
     );
 }
 
+// طلبات رئيس المستودع العادية 
+
+public function warehousePendingNormal()
+{
+    return response()->json(
+        $this->requestOrderService
+            ->getWarehousePendingNormalRequests()
+    );
+}
+
+
+//طلبات رئيس المستودع المستعجلة 
+
+public function warehousePendingUrgent()
+{
+    return response()->json(
+        $this->requestOrderService
+            ->getWarehousePendingUrgentRequests()
+    );
+}
+
+
+
 }

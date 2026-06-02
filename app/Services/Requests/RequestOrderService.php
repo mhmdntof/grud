@@ -191,5 +191,39 @@ public function getPendingNormalRequests()
     ->get();
 }
 
+// طلبات رئيس المستودع العادية 
+
+public function getWarehousePendingNormalRequests()
+{
+    return RequestOrder::with([
+        'department',
+        'requester',
+        'items.product'
+    ])
+    ->where('manager_status', 'approved')
+    ->where('warehouse_status', 'pending')
+    ->where('request_type', 'normal')
+    ->latest()
+    ->get();
+}
+
+
+
+//طلبات رئيس المستودع المستعجلة 
+
+public function getWarehousePendingUrgentRequests()
+{
+    return RequestOrder::with([
+        'department',
+        'requester',
+        'items.product'
+    ])
+    ->where('manager_status', 'approved')
+    ->where('warehouse_status', 'pending')
+    ->where('request_type', 'urgent')
+    ->latest()
+    ->get();
+}
+
 
 }

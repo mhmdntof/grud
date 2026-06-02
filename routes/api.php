@@ -77,6 +77,20 @@ Route::middleware([
     Route::post('/add-batch',[ProductController::class,'addBatch']);
  Route::post(  '/requests/{id}/warehouse-approval',[RequestOrderController::class,'warehouseApproval']
     );
+
+
+ Route::get(
+        '/warehouse-requests/pending/normal',
+        [RequestOrderController::class,
+        'warehousePendingNormal']
+    );
+
+    Route::get(
+        '/warehouse-requests/pending/urgent',
+        [RequestOrderController::class,
+        'warehousePendingUrgent']
+    );
+
 });
 
 // Warehouse Manager Routes
