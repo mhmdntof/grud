@@ -69,18 +69,10 @@ Route::middleware([
     Route::post('/add-batch',[ProductController::class,'addBatch']);
  Route::post(  '/requests/{id}/warehouse-approval',[RequestOrderController::class,'warehouseApproval']
     );
- feature/department-head-system
+});
+
 // Warehouse Manager Routes
-Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
-    ->prefix('warehouse')
-    ->group(function () {
-        Route::post('/stock-in', [WarehouseController::class, 'stockIn']);
-        Route::post('/stock-out', [WarehouseController::class, 'stockOut']);
-        Route::post('/damage', [WarehouseController::class, 'damage']);
-        Route::get('/alerts', [WarehouseController::class, 'alerts']);
-        Route::get('/products', [WarehouseController::class, 'index']);
-        Route::get('/requests', [WarehouseController::class, 'requests']);
-    });
+
 
 
 
@@ -92,15 +84,12 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
 
 
 
-});
- feature/department-head-system
-
 
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
 
-  Route::get('/mail-test', function () {
+ 
 
 
 
@@ -132,15 +121,12 @@ Route::post('/login', [AuthController::class, 'login']);
 //Route::post('/login-web', [AuthController::class, 'loginWeb']);
 
 
-Route::get('/test', function () {
-    return 'IT WORKS';
-});
-    
+
 
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
- feature/department-head-system
+
 Route::get('/test-resend-key', function () {
     return env('RESEND_API_KEY');
 });
@@ -148,7 +134,7 @@ Route::get('/test-resend-key', function () {
 
 
 
-// ─── Department Head ───
+
 Route::middleware(['auth:sanctum', 'role:department_head'])
     ->prefix('department-head')
     ->group(function () {
