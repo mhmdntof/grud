@@ -4,6 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\DepartmentHeadController;
+
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -17,7 +20,7 @@ Route::get('/user', function (Request $request) {
 
 
 
-//قسم الادمن 
+//قسم الادمن
 
 
 Route::middleware([
@@ -32,7 +35,7 @@ Route::post('/create-hospital-manager', [AuthController::class, 'createHospitalM
 
 
 
-//قسم مدير المشفى 
+//قسم مدير المشفى
 
 
 Route::middleware([
@@ -66,11 +69,28 @@ Route::middleware([
     Route::post('/add-batch',[ProductController::class,'addBatch']);
  Route::post(  '/requests/{id}/warehouse-approval',[RequestOrderController::class,'warehouseApproval']
     );
-
-
-
-
 });
+
+// Warehouse Manager Routes
+
+
+
+
+
+
+//قسم عام
+
+
+
+
+
+
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/set-password', [AuthController::class, 'setPassword']);
+
+
+ 
+
 
 
 
@@ -105,4 +125,21 @@ Route::post('/login', [AuthController::class, 'login']);
 
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
+
+
+Route::get('/test-resend-key', function () {
+    return env('RESEND_API_KEY');
+});
+
+
+
+
+
+Route::middleware(['auth:sanctum', 'role:department_head'])
+    ->prefix('department-head')
+    ->group(function () {
+        Route::post('/requests', [DepartmentHeadController::class, 'store']);
+        Route::get('/requests', [DepartmentHeadController::class, 'index']);
+        Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
+    });
 
