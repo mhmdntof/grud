@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 //use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Batch extends Model
 {
- feature/department-head-system
+ 
     use SoftDeletes;
 
     protected $fillable = ['product_id', 'supplier_id',
-        'batch_number', 'quantity', 'expire_date', 'purchase_price', 'notes'];
+        'batch_number', 'quantity', 'expire_date', 'purchase_price', 'notes','request-type'];
 
     protected $casts = [
         'expire_date' => 'date',
@@ -37,18 +37,6 @@ class Batch extends Model
         return $this->hasMany(StockMovement::class);
     }
 }
-    protected $fillable = [
-        'product_id',
-        'batch_number',
-        'quantity',
-        'expire_date',
-        'purchase_price',
-        'request-type'
-    ];
+    
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
 }
-main
