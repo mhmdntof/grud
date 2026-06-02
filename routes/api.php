@@ -4,6 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\DepartmentHeadController;
+
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -17,7 +20,7 @@ Route::get('/user', function (Request $request) {
 
 
 
-//قسم الادمن 
+//قسم الادمن
 
 
 Route::middleware([
@@ -32,7 +35,7 @@ Route::post('/create-hospital-manager', [AuthController::class, 'createHospitalM
 
 
 
-//قسم مدير المشفى 
+//قسم مدير المشفى
 
 
 Route::middleware([
@@ -66,11 +69,40 @@ Route::middleware([
     Route::post('/add-batch',[ProductController::class,'addBatch']);
  Route::post(  '/requests/{id}/warehouse-approval',[RequestOrderController::class,'warehouseApproval']
     );
+ feature/department-head-system
+// Warehouse Manager Routes
+Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
+    ->prefix('warehouse')
+    ->group(function () {
+        Route::post('/stock-in', [WarehouseController::class, 'stockIn']);
+        Route::post('/stock-out', [WarehouseController::class, 'stockOut']);
+        Route::post('/damage', [WarehouseController::class, 'damage']);
+        Route::get('/alerts', [WarehouseController::class, 'alerts']);
+        Route::get('/products', [WarehouseController::class, 'index']);
+        Route::get('/requests', [WarehouseController::class, 'requests']);
+    });
 
+
+
+
+
+//قسم عام
+
+main
 
 
 
 });
+ feature/department-head-system
+
+
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/set-password', [AuthController::class, 'setPassword']);
+
+
+  Route::get('/mail-test', function () {
+=======
+ main
 
 
 
@@ -109,3 +141,21 @@ Route::get('/test', function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
+ feature/department-head-system
+Route::get('/test-resend-key', function () {
+    return env('RESEND_API_KEY');
+});
+
+
+
+
+// ─── Department Head ───
+Route::middleware(['auth:sanctum', 'role:department_head'])
+    ->prefix('department-head')
+    ->group(function () {
+        Route::post('/requests', [DepartmentHeadController::class, 'store']);
+        Route::get('/requests', [DepartmentHeadController::class, 'index']);
+        Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
+    });
+=======
+ main
