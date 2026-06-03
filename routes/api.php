@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\DepartmentHeadController;
+use App\Http\Controllers\PurchaseRequestController;
 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -90,6 +91,13 @@ Route::middleware([
         [RequestOrderController::class,
         'warehousePendingUrgent']
     );
+
+
+  Route::post(
+            '/purchase-requests',
+            [PurchaseRequestController::class, 'store']
+        );
+
 
 });
 
