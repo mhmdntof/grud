@@ -86,10 +86,7 @@ Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'m
 
 //تفاصيل طلب شراء 
 
-Route::get(
-    '/purchase-requests/{id}',
-    [PurchaseRequestController::class, 'show']
-)->middleware('auth:sanctum');
+
 
  });
 
@@ -152,10 +149,7 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
 
         //تفاصيل طلب شراء 
 
-        Route::get(
-    '/purchase-requests/{id}',
-    [PurchaseRequestController::class, 'show']
-)->middleware('auth:sanctum');
+     
     });
 
 
