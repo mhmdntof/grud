@@ -34,6 +34,10 @@ Route::post('/create-hospital-manager', [AuthController::class, 'createHospitalM
 });
 
 
+        Route::get(
+    '/purchase-requests/{id}',
+    [PurchaseRequestController::class, 'show']
+)->middleware('auth:sanctum');
 
 
 //قسم مدير المشفى
