@@ -184,4 +184,19 @@ public function getPendingManagerNormalRequests()
     ->get();
 }
 
+
+
+//عرض تفاصيل طلب شراء
+
+
+public function getById($id)
+{
+    return PurchaseRequest::with([
+        'requester',
+        'supplier',
+        'items.product'
+    ])->findOrFail($id);
+}
+
+
 }

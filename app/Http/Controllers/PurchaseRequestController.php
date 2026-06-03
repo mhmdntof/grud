@@ -136,4 +136,21 @@ public function pendingManagerNormal()
             ->getPendingManagerNormalRequests()
     );
 }
+
+
+//عرض تفاصيل  طلب شراء}
+
+
+public function show($id)
+{
+    $purchaseRequest = $this->purchaseRequestService
+        ->getById($id);
+
+    return response()->json([
+        'data' => $purchaseRequest
+    ]);
+}
+
+
+
 }

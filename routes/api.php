@@ -80,7 +80,12 @@ Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'m
         [PurchaseRequestController::class, 'pendingManagerNormal']
     );
 
+//تفاصيل طلب شراء 
 
+Route::get(
+    '/purchase-requests/{id}',
+    [PurchaseRequestController::class, 'show']
+)->middleware('auth:sanctum');
 
  });
 
@@ -139,6 +144,14 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
             [PurchaseRequestController::class, 'rejectCommittee']
         );
 
+
+
+        //تفاصيل طلب شراء 
+
+        Route::get(
+    '/purchase-requests/{id}',
+    [PurchaseRequestController::class, 'show']
+)->middleware('auth:sanctum');
     });
 
 
