@@ -36,4 +36,85 @@ class PurchaseRequestService
             ]);
         });
     }
+
+
+    //تابع موافقة المدير
+
+
+    public function approveByManager($id)
+{
+    $request = PurchaseRequest::findOrFail($id);
+
+    if ($request->manager_status !== 'pending') {
+        throw new \Exception('Request already processed by manager');
+    }
+
+    $request->update([
+        'manager_status' => 'approved'
+    ]);
+
+    return $request;
+}
+
+
+// تابع رفض المدير 
+
+public function rejectByManager($id, $reason = null)
+{
+    $request = PurchaseRequest::findOrFail($id);
+
+    if ($request->manager_status !== 'pending') {
+        throw new \Exception('Request already processed by manager');
+    }
+
+    $request->update([
+        'manager_status' => 'rejected',
+        'rejection_reason' => $reason
+    ]);
+
+    return $request;
+}
+//تابع موافقة رئيس لجنة الشراء
+
+public function approveByCommittee($id)
+{
+    $request = PurchaseRequest::findOrFail($id);
+
+    if ($request->manager_status !== 'approved') {
+        throw new \Exception('Manager must approve first');
+    }
+
+    if ($request->committee_status !== 'pending') {
+        throw new \Exception('Already processed by committee');
+    }
+
+    $request->update([
+        'committee_status' => 'approved'
+    ]);
+
+    return $request;
+}
+
+//تابع الرفض
+
+public function rejectByCommittee($id, $reason = null)
+{
+    $request = PurchaseRequest::findOrFail($id);
+
+    if ($request->manager_status !== 'approved') {
+        throw new \Exception('Manager must approve first');
+    }
+
+    if ($request->committee_status !== 'pending') {
+        throw new \Exception('Already processed by committee');
+    }
+
+    $request->update([
+        'committee_status' => 'rejected',
+        'rejection_reason' => $reason
+    ]);
+
+    return $request;
+}
+
 }
