@@ -69,6 +69,19 @@ Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'m
             [PurchaseRequestController::class, 'rejectManager']
         );
 
+
+            Route::get(
+        '/purchase-requests/manager/pending/urgent',
+        [PurchaseRequestController::class, 'pendingManagerUrgent']
+    );
+
+    Route::get(
+        '/purchase-requests/manager/pending/normal',
+        [PurchaseRequestController::class, 'pendingManagerNormal']
+    );
+
+
+
  });
 
 
@@ -129,7 +142,7 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
     });
 
 
-// Warehouse Manager Routes
+
 
 
 
@@ -164,6 +177,18 @@ Route::middleware([
         RequestOrderController::class,
         'store'
     ]);
+
+
+
+      Route::get(
+        '/purchase-requests/committee/pending/urgent',
+        [PurchaseRequestController::class, 'pendingCommitteeUrgent']
+    );
+
+    Route::get(
+        '/purchase-requests/committee/pending/normal',
+        [PurchaseRequestController::class, 'pendingCommitteeNormal']
+    );
 
 });
 
