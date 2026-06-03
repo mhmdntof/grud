@@ -91,4 +91,49 @@ public function rejectCommittee(Request $request, $id)
     ]);
 }
 
+
+//طلبات رئيس الشراء المستعجلة 
+
+public function pendingCommitteeUrgent()
+{
+    return response()->json(
+        $this->purchaseRequestService
+            ->getPendingCommitteeUrgentRequests()
+    );
+}
+
+
+//الطلبات العادية 
+
+public function pendingCommitteeNormal()
+{
+    return response()->json(
+        $this->purchaseRequestService
+            ->getPendingCommitteeNormalRequests()
+    );
+}
+
+
+//طلبات المدير للشراء المستعجلة 
+
+
+public function pendingManagerUrgent()
+{
+    return response()->json(
+        $this->purchaseRequestService
+            ->getPendingManagerUrgentRequests()
+    );
+}
+
+
+//الطلبات العادية 
+
+
+public function pendingManagerNormal()
+{
+    return response()->json(
+        $this->purchaseRequestService
+            ->getPendingManagerNormalRequests()
+    );
+}
 }

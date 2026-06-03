@@ -117,4 +117,71 @@ public function rejectByCommittee($id, $reason = null)
     return $request;
 }
 
+//طلبات رئيس الشراء المستعجلة 
+
+public function getPendingCommitteeUrgentRequests()
+{
+    return PurchaseRequest::with([
+        'requester',
+        'supplier',
+        'items.product'
+    ])
+    ->where('manager_status', 'approved')
+    ->where('committee_status', 'pending')
+    ->where('request_type', 'urgent')
+    ->latest()
+    ->get();
+}
+
+
+//الطلبات العادية 
+
+
+public function getPendingCommitteeNormalRequests()
+{
+    return PurchaseRequest::with([
+        'requester',
+        'supplier',
+        'items.product'
+    ])
+    ->where('manager_status', 'approved')
+    ->where('committee_status', 'pending')
+    ->where('request_type', 'normal')
+    ->latest()
+    ->get();
+}
+
+
+//طلبات مدير المشفى للشراء المستعجلة 
+
+public function getPendingManagerUrgentRequests()
+{
+    return PurchaseRequest::with([
+        'requester',
+        'supplier',
+        'items.product'
+    ])
+    ->where('manager_status', 'pending')
+    ->where('request_type', 'urgent')
+    ->latest()
+    ->get();
+}
+
+
+//الطلبات العادية 
+
+
+public function getPendingManagerNormalRequests()
+{
+    return PurchaseRequest::with([
+        'requester',
+        'supplier',
+        'items.product'
+    ])
+    ->where('manager_status', 'pending')
+    ->where('request_type', 'normal')
+    ->latest()
+    ->get();
+}
+
 }
