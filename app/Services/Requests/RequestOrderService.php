@@ -225,5 +225,14 @@ public function getWarehousePendingUrgentRequests()
     ->get();
 }
 
+// تفاصيل طلب المستودع 
 
+public function getRequestOrderById($id)
+{
+    return RequestOrder::with([
+        'department',
+        'requester',
+        'items.product'
+    ])->findOrFail($id);
+}
 }

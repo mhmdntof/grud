@@ -117,7 +117,17 @@ public function warehousePendingUrgent()
             ->getWarehousePendingUrgentRequests()
     );
 }
+//تفاصيل طلب المستودع 
 
+public function show($id)
+{
+    $requestOrder = $this->requestOrderService
+        ->getRequestOrderById($id);
+
+    return response()->json([
+        'data' => $requestOrder
+    ]);
+}
 
 
 }
