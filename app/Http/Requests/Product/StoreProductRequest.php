@@ -23,8 +23,8 @@ class StoreProductRequest extends FormRequest
 
             'minimum_stock' => 'nullable|integer|min:0',
 
-            'unit' => 'nullable|string|max:100',
-
+            'unit' => 'required|in:piece,liter,kilogram,dozen',
+            
             'description' => 'nullable|string',
         ];
     }

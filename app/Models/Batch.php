@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 //use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Batch extends Model
 {
+ 
     use SoftDeletes;
 
     protected $fillable = ['product_id', 'supplier_id',
-        'batch_number', 'quantity', 'expire_date', 'purchase_price', 'notes'];
+        'batch_number', 'quantity', 'expire_date', 'purchase_price', 'notes','request-type'];
 
     protected $casts = [
         'expire_date' => 'date',
@@ -36,3 +37,6 @@ class Batch extends Model
         return $this->hasMany(StockMovement::class);
     }
 }
+    
+
+
