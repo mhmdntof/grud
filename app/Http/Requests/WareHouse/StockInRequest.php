@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Warehouse;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,7 +27,7 @@ class StockInRequest extends FormRequest
             'supplier_id' => 'required|exists:suppliers,id',
             'batch_number' => 'required|string|unique:batches,batch_number',
             'quantity' => 'required|integer|min:1',
-            'expire_date' => 'required|date|after:today',
+            'expire_date' => 'nullable|date|after:today',
             'purchase_price' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
         ];

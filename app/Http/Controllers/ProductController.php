@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\Product\StoreProductRequest;
+//use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\AddBatchRequest;
 
 
@@ -30,7 +31,9 @@ class ProductController extends Controller
             'product' => $product
 
         ], 201);
-        }
+    }
+
+
 
 
 public function addBatch(AddBatchRequest $request)
@@ -45,6 +48,6 @@ public function addBatch(AddBatchRequest $request)
 }
 
 
-        }
+}
 
 

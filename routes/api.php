@@ -2,15 +2,18 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\DepartmentHeadController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseRequestController;
 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+
 use App\Http\Controllers\RequestOrderController;
 
 
@@ -84,14 +87,12 @@ Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'m
         [PurchaseRequestController::class, 'pendingManagerNormal']
     );
 
-//تفاصيل طلب شراء 
+//تفاصيل طلب شراء
 
 
 
  });
 
-
-//قسم مدير المستودع
 
 
 
@@ -130,11 +131,10 @@ Route::middleware([
 
 
 
-//رئيس لجنة الشراء 
+//رئيس لجنة الشراء
 
 Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
     ->group(function () {
-
         Route::patch(
             '/purchase-requests/{id}/committee/approve',
             [PurchaseRequestController::class, 'approveCommittee']
@@ -144,20 +144,10 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
             '/purchase-requests/{id}/committee/reject',
             [PurchaseRequestController::class, 'rejectCommittee']
         );
-
-
-
-        //تفاصيل طلب شراء 
-
-     
     });
 
 
-
-
-
-
-
+//تفاصيل طلب شراء
 
 
 //قسم عام
@@ -174,12 +164,12 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
 
- 
 
 
 
 
-//قسم رئيس القسم 
+
+//قسم رئيس القسم
 
 
 Route::middleware([
@@ -206,14 +196,7 @@ Route::middleware([
 
 });
 
-
-
-
-
-
-//قسم عام 
-
-
+//قسم عام
 Route::post('/login', [AuthController::class, 'login']);
 //Route::post('/login-web', [AuthController::class, 'loginWeb']);
 
@@ -228,10 +211,7 @@ Route::get('/test-resend-key', function () {
     return env('RESEND_API_KEY');
 });
 
-
-
-
-
+// DepartmentHead Routes
 Route::middleware(['auth:sanctum', 'role:department_head'])
     ->prefix('department-head')
     ->group(function () {
@@ -239,4 +219,33 @@ Route::middleware(['auth:sanctum', 'role:department_head'])
         Route::get('/requests', [DepartmentHeadController::class, 'index']);
         Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
     });
+
+// Warehouse Manager Routes
+Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
+    ->prefix('warehouse')
+    ->group(function () {
+        Route::post('/stock-in', [WarehouseController::class, 'stockIn']);
+        Route::post('/stock-out', [WarehouseController::class, 'stockOut']);
+        Route::post('/damage', [WarehouseController::class, 'damage']);
+        Route::get('/alerts', [WarehouseController::class, 'alerts']);
+        Route::get('/products', [WarehouseController::class, 'index']);
+        Route::get('/requests', [WarehouseController::class, 'requests']);
+        // جديد: قبول/رفض الطلبات
+        Route::post('/requests/approve', [WarehouseController::class, 'approve']);
+        Route::post('/requests/reject', [WarehouseController::class, 'reject']);
+        // تحضير الطلب in_progress
+        Route::post('/requests/prepare', [WarehouseController::class, 'prepare']);
+        // الطلب جاهز ready
+        Route::post('/requests/ready', [WarehouseController::class, 'ready']);
+        //ال CRUD Suppliers
+        Route::get('/suppliers', [SupplierController::class, 'index']);
+        Route::get('/suppliers/{id}', [SupplierController::class, 'show']);
+        Route::post('/suppliers', [SupplierController::class, 'store']);
+        Route::put('/suppliers/{id}', [SupplierController::class, 'update']);
+        Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
+        Route::post('/suppliers/{id}/restore', [SupplierController::class, 'restore']);
+        //  أرشيف الحركات
+        Route::get('/movements', [WarehouseController::class, 'movements']);
+    });
+
 

@@ -6,11 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DepartmentProduct extends Model
 {
-    protected $fillable = [
-        'department_id',
-        'product_id',
-        'quantity'
-    ];
+    protected $fillable = ['department_id', 'product_id', 'quantity'];
 
     public function department()
     {
@@ -22,3 +18,4 @@ class DepartmentProduct extends Model
         return $this->belongsTo(Product::class);
     }
 }
+

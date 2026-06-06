@@ -13,6 +13,7 @@ class RequestResource extends JsonResource
             'id' => $this->id,
             'type' => $this->type,
             'status' => $this->status,
+            'notes' => $this->notes,
 
             // القسم
             'department' => [
