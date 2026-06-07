@@ -18,7 +18,7 @@ return new class extends Migration
 
     $table->string('code')->unique();
 
-    $table->enum('type', ['fixed', 'consumable']);
+    $table->string('type');
 
     $table->integer('total_quantity')->default(0);
 

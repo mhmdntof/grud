@@ -55,12 +55,12 @@ Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'m
 );
   Route::get(
         '/request-orders/pending/normal',
-        [RequestOrderController::class, 'pendingNormal']
+        [RequestOrderController::class, 'getPendingNormalRequests']
     );
 
     Route::get(
         '/request-orders/pending/urgent',
-        [RequestOrderController::class, 'pendingUrgent']
+        [RequestOrderController::class, 'getPendingUrgentRequests']
     );
 
   Route::patch(
@@ -84,7 +84,24 @@ Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'m
         [PurchaseRequestController::class, 'pendingManagerNormal']
     );
 
-//تفاصيل طلب شراء 
+
+    //موافقة لمدير على طلب قسم
+Route::patch(
+    '/request-orders/{id}/approve',
+    [RequestOrderController::class, 'approveByManager']
+);
+//رفض المدير لطلب قسم 
+Route::patch(
+    '/request-orders/{id}/reject',
+    [RequestOrderController::class, 'rejectByManager']
+);
+
+//جلب الطلبات قيد التنفيذ 
+
+Route::get(
+    '/request-orders/in-progress',
+    [RequestOrderController::class, 'getInProgressRequests']
+);
 
 
 
@@ -124,6 +141,23 @@ Route::middleware([
             '/purchase-requests',
             [PurchaseRequestController::class, 'store']
         );
+
+//الموافقة على طلب القسم 
+
+Route::patch(
+    '/request-orders/{id}/warehouse-approve',
+    [RequestOrderController::class,
+     'approveByWarehouse']
+);
+
+//رفض طلب القسم 
+
+Route::patch(
+    '/request-orders/{id}/warehouse-reject',
+    [RequestOrderController::class,
+     'rejectByWarehouse']
+);
+
 
 
 });
@@ -203,6 +237,21 @@ Route::middleware([
         '/purchase-requests/committee/pending/normal',
         [PurchaseRequestController::class, 'pendingCommitteeNormal']
     );
+
+    //استلام المواد من المستودع
+
+    Route::patch(
+    '/request-orders/{id}/confirm-delivery',
+    [RequestOrderController::class,
+     'confirmDelivery']
+);
+
+Route::patch(
+    '/request-orders/{id}/reject-delivery',
+    [RequestOrderController::class,
+     'rejectDelivery']
+);
+
 
 });
 

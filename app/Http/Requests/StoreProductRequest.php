@@ -19,7 +19,7 @@ class StoreProductRequest extends FormRequest
 
             'code' => 'required|string|unique:products,code',
 
-            'type' => 'required|in:fixed,consumable',
+           'type' => 'required|string|in:fixed,consumable,medicine',
 
             'minimum_stock' => 'nullable|integer|min:0',
 

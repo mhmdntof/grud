@@ -26,20 +26,15 @@ return new class extends Migration
     // normal | urgent
     $table->string('request_type');
 
-    // pending | approved | rejected
-    $table->string('manager_status')
-        ->default('pending');
-
-    // pending | approved | rejected
-    $table->string('warehouse_status')
+    // pending | in_progress | ready_for_delivery | delivered | rejected
+    $table->string('status')
         ->default('pending');
 
     $table->text('rejection_reason')
         ->nullable();
 
     $table->timestamps();
-
-    });
+});
 }
 
     /**
