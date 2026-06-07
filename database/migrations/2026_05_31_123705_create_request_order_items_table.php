@@ -12,20 +12,26 @@ return new class extends Migration
    public function up(): void
 {
     Schema::create('request_order_items', function (Blueprint $table) {
-        $table->id();
 
-        $table->foreignId('request_order_id')
-            ->constrained()
-            ->onDelete('cascade');
+    $table->id();
 
-        $table->foreignId('product_id')
-            ->constrained()
-            ->onDelete('cascade');
+    $table->foreignId('request_order_id')
+        ->constrained()
+        ->onDelete('cascade');
 
-        $table->integer('quantity');
+    $table->foreignId('product_id')
+        ->constrained()
+        ->onDelete('cascade');
 
-        $table->timestamps();
-    });
+    // الكمية المطلوبة من القسم
+    $table->integer('quantity');
+
+    // الكمية التي وافق عليها المستودع
+    $table->integer('approved_quantity')
+        ->nullable();
+
+    $table->timestamps();
+});
 }
 
     /**
