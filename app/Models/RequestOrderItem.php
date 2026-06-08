@@ -9,7 +9,8 @@ class RequestOrderItem extends Model
     protected $fillable = [
         'request_order_id',
         'product_id',
-        'quantity'
+        'quantity',
+        'approved_quantity'
     ];
 
     public function requestOrder()

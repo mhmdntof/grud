@@ -145,7 +145,7 @@ Route::middleware([
 
 //الموافقة على طلب القسم 
 
-Route::post(
+Route::patch(
     '/request-orders/{id}/warehouse-approve',
     [RequestOrderController::class,
      'approveByWarehouse']
