@@ -44,6 +44,17 @@ public function addBatch(AddBatchRequest $request)
     ]);
 }
 
+//جلب مواد المستودع الرئيسي
+
+public function getWarehouseProducts(string $type)
+{
+    return response()->json([
+        'data' => $this->productService
+            ->getWarehouseProducts($type)
+    ]);
+}
+
+
 
         }
 

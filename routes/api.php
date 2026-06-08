@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\DepartmentHeadController;
 use App\Http\Controllers\PurchaseRequestController;
+use App\Http\Controllers\DepartmentController;
 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -277,8 +278,20 @@ Route::get('/test-resend-key', function () {
     return env('RESEND_API_KEY');
 });
 
+//جلب مواد المستودع الرئيسي 
+
+Route::get(
+    '/warehouse/products/{type}',
+    [ProductController::class, 'getWarehouseProducts']
+);
 
 
+//جلب مواد القسم 
+
+Route::get(
+    '/departments/{departmentName}/products/{type}',
+    [DepartmentController::class, 'getDepartmentProducts']
+);
 
 
 Route::middleware(['auth:sanctum', 'role:department_head'])

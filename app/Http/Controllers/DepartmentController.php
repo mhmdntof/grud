@@ -21,4 +21,22 @@ class DepartmentController extends Controller
                 ->getDepartments()
         ]);
     }
+
+
+//جلب مواد القسم 
+
+public function getDepartmentProducts(
+    string $departmentName,
+    string $type
+)
+{
+    return response()->json([
+        'data' => $this->departmentService
+            ->getDepartmentProducts(
+                $departmentName,
+                $type
+            )
+    ]);
+}
+
 }
