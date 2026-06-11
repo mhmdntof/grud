@@ -54,7 +54,14 @@ public function getWarehouseProducts(string $type)
     ]);
 }
 
+//كل مواد المستودع  
 
+public function getAllWarehouseProducts()
+{
+    return response()->json([
+        'data' => $this->productService->getAllWarehouseProducts()
+    ]);
+}
 
         }
 

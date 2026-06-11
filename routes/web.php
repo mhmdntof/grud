@@ -11,9 +11,21 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::post('/login', [AuthController::class, 'loginWeb']);
-Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
+// المصادقة
+Route::middleware('web')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+});
 
+// جلب بيانات المستخدم الحالي
+Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
+    return response()->json([
+        'id' => $request->user()->id,
+        'name' => $request->user()->name,
+        'email' => $request->user()->email,
+        'role' => $request->user()->role->name
+    ]);
+});
 
 
 

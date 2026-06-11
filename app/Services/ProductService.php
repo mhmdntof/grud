@@ -104,7 +104,19 @@ public function getDepartmentProducts(
         ->get();
 }
 
+//كل مواد المستودع 
 
+public function getAllWarehouseProducts()
+{
+    return Product::select(
+        'id',
+        'name',
+        'type',
+        'total_quantity'
+    )
+    ->orderBy('name')
+    ->get();
+}
 
 }
 
