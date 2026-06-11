@@ -344,4 +344,34 @@ public function getInProgressRequests()
 }
 
 
+//جلب جميع طلبات الاقسام 
+
+
+public function getAllDepartmentRequests()
+{
+    return RequestOrder::with([
+        'department:id,name',
+        'items:id,request_order_id,product_id,quantity',
+        'items.product:id,name,type'
+    ])
+    ->orderBy('created_at', 'desc')
+    ->get()
+    ->map(function ($request) {
+        return [
+            'id' => $request->id,
+            'department_name' => $request->department->name,
+            'status' => $request->status,
+            'request_type' => $request->request_type,
+            'created_at' => $request->created_at,
+            'items' => $request->items->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name,
+                    'quantity' => $item->quantity,
+                ];
+            }),
+        ];
+    });
+}
+
 }

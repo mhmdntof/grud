@@ -12,6 +12,7 @@ use App\Http\Requests\ResendOtpRequest;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Request;
 
 use App\Http\Requests\StoreProductRequest;
 
@@ -38,7 +39,7 @@ class AuthController extends Controller
     }
 
 
-public function login(LoginRequest $request)
+public function logina(LoginRequest $request)
 {
     $result = $this->authService->login(
         $request->validated()
@@ -186,6 +187,37 @@ public function me()
     return response()->json(
         $this->authService->me()
     );
+}
+
+
+public function login(Request $request)
+{
+    $credentials = $request->validate([
+        'email' => ['required','email'],
+        'password' => ['required'],
+    ]);
+
+    if (! Auth::attempt($credentials)) {
+        return response()->json(['message' => 'Invalid credentials'], 401);
+    }
+
+    // حماية CSRF
+    $request->session()->regenerate();
+
+    return response()->json([
+        'message' => 'Login successful'
+    ]);
+}
+
+public function logout(Request $request)
+{
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return response()->json([
+        'message' => 'Logged out'
+    ]);
 }
 
 

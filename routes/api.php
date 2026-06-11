@@ -294,6 +294,27 @@ Route::get(
 );
 
 
+
+//جلب مواد المستودع 
+
+Route::get(
+    '/get/warehouse/products',
+    [ProductController::class, 'getAllWarehouseProducts']
+);
+
+//جلب جميع طلبات الاقسام 
+Route::get(
+    '/get/department-requests',
+    [RequestOrderController::class, 'getAllDepartmentRequests']
+);
+
+
+
+
+
+
+
+
 Route::middleware(['auth:sanctum', 'role:department_head'])
     ->prefix('department-head')
     ->group(function () {

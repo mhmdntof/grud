@@ -207,4 +207,13 @@ public function getInProgressRequests()
     ]);
 }
 
+//جلب جميع طلبات الاقسام 
+public function getAllDepartmentRequests()
+{
+    return response()->json([
+        'data' => $this->requestOrderService->getAllDepartmentRequests()
+    ]);
+}
+
+
 }
