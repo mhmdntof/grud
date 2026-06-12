@@ -190,25 +190,28 @@ public function me()
 }
 
 
-public function login(Request $request)
+public function login(LoginRequest $request)
 {
-    $credentials = $request->validate([
-        'email' => ['required','email'],
-        'password' => ['required'],
-    ]);
+    $result = $this->authService->login(
+        $request->validated()
+    );
 
-    if (! Auth::attempt($credentials)) {
-        return response()->json(['message' => 'Invalid credentials'], 401);
+    if (isset($result['error'])) {
+        return response()->json([
+            'message' => $result['error']
+        ], 401);
     }
 
-    // حماية CSRF
-    $request->session()->regenerate();
-
     return response()->json([
-        'message' => 'Login successful'
+        'token' => $result['token'],
+        'user' => [
+            'id' => $result['user']->id,
+            'name' => $result['user']->name,
+            'email' => $result['user']->email,
+            'role_id' => $result['user']->role_id,
+        ]
     ]);
 }
-
 public function logout(Request $request)
 {
     Auth::logout();
