@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Request;
 
+
 use App\Http\Requests\StoreProductRequest;
 
 class AuthController extends Controller
@@ -168,26 +169,9 @@ public function resendOtp(
 }
 
 
-public function loginWeb(LoginRequest $request): JsonResponse
-    {
-        // 1. استدعاء السيرفيس للتحقق من الحساب عبر البيانات التي تم التحقق منها (validated)
-        $this->authService->attemptLogin($request->validated());
 
-        // 2. تحديث الجلسة بعد نجاح الدخول (خطوة أمنية إجبارية في الـ SPA)
-        $request->session()->regenerate();
 
-        return response()->json([
-            'message' => 'Authenticated successfully',
-            'user'    => Auth::user()
-        ], 200);
-    }
 
-public function me()
-{
-    return response()->json(
-        $this->authService->me()
-    );
-}
 
 
 public function login(LoginRequest $request)
@@ -222,6 +206,46 @@ public function logout(Request $request)
         'message' => 'Logged out'
     ]);
 }
+
+
+
+//تسجيل دخول الويب 
+
+public function loginWeb(LoginRequest $request)
+{
+    $result = $this->authService->login(
+        $request->validated()
+    );
+
+    if (isset($result['error'])) {
+        return response()->json([
+            'message' => $result['error']
+        ], 401);
+    }
+
+    $request->session()->regenerate();
+
+    return response()->json([
+        'message' => 'Login successful'
+    ]);
+}
+
+
+
+// 
+
+//
+  // public function me(Request $request)
+//{
+// /** @var \App\Models\User $user */
+//$user = $request->user();
+
+//return response()->json([
+  //  'id' => $user->id,
+    //'name' => $user->name,
+    //'email' => $user->email,
+//]);
+//}
 
 
 }

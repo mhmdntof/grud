@@ -380,7 +380,27 @@ public function attemptLogin(array $credentials): bool
 
         return true;
     }
+// تسجيل دخول الويب 
 
+
+public function loginًWeb(array $data)
+{
+    $user = User::where('email', $data['email'])->first();
+
+    if (!$user || !Hash::check($data['password'], $user->password)) {
+        return ['error' => 'Invalid credentials'];
+    }
+
+    if (!$user->status) {
+        return ['error' => 'Account not activated'];
+    }
+
+    Auth::login($user);
+
+    return [
+        'user' => $user
+    ];
+}
 
 
 public function me()
