@@ -199,34 +199,27 @@ public function sendOtp(Request $request, OtpService $otpService)
         'email' => 'required|email'
     ]);
 
-    // 1. نجيب المستخدم أو ننشئه
-    $user = User::firstOrCreate(
-        ['email' => $request->email],
-        [
-            'name' => 'employee',
-            
-              'role_id' => 2
-        ]
-    );
+    $user = User::where('email', $request->email)->first();
 
-    // 2. توليد OTP (Core Layer)
+    if (!$user) {
+        return response()->json([
+            'message' => 'User not found'
+        ], 404);
+    }
+
     $otp = $otpService->generate($user);
 
-    // 3. إرسال الإيميل (Delivery Layer)
-    try {
-        Mail::raw("Your verification code is: $otp", function ($message) use ($user) {
+    Mail::raw(
+        "Your verification code is: {$otp}",
+        function ($message) use ($user) {
             $message->to($user->email)
                 ->subject('Verification Code');
-        });
-    } catch (\Exception $e) {
-        // ما بنوقف النظام إذا فشل الإيميل
-        Log::error('Email failed: ' . $e->getMessage());
-    }
+        }
+    );
 
     return response()->json([
         'message' => 'OTP sent successfully'
     ]);
 }
-
 
 }
