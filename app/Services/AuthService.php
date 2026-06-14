@@ -382,8 +382,7 @@ public function attemptLogin(array $credentials): bool
     }
 // تسجيل دخول الويب 
 
-
-public function loginًWeb(array $data)
+public function loginWeb(array $data)
 {
     $user = User::where('email', $data['email'])->first();
 
