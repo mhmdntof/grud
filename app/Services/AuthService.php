@@ -369,17 +369,7 @@ public function resendOtp(array $data)
 }
 
 
-public function attemptLogin(array $credentials): bool
-    {
-        // محاولة تسجيل الدخول وتفعيل ميزة "تذكرني" (Remember Me) لتبقى الجلسة طويلة
-        if (!Auth::attempt($credentials, true)) {
-            throw ValidationException::withMessages([
-                'email' => ['البيانات المدخلة غير صحيحة.'],
-            ]);
-        }
 
-        return true;
-    }
 // تسجيل دخول الويب 
 
 public function loginWeb(array $data)

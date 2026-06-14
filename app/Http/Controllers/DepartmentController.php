@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\DepartmentService;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Request;
 
 class DepartmentController extends Controller
 {
@@ -38,5 +40,8 @@ public function getDepartmentProducts(
             )
     ]);
 }
+
+
+
 
 }
