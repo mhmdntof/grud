@@ -13,6 +13,11 @@ use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Request;
+use App\Services\OtpService;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
+
 
 
 use App\Http\Requests\StoreProductRequest;
@@ -187,7 +192,39 @@ public function login(LoginRequest $request)
 
 
 
+public function sendOtp(Request $request, OtpService $otpService)
+{
+    $request->validate([
+        'email' => 'required|email'
+    ]);
 
+    // 1. نجيب المستخدم أو ننشئه
+    $user = User::firstOrCreate(
+        ['email' => $request->email],
+        [
+            'name' => 'employee',
+            'status' => false
+        ]
+    );
+
+    // 2. توليد OTP (Core Layer)
+    $otp = $otpService->generate($user);
+
+    // 3. إرسال الإيميل (Delivery Layer)
+    try {
+        Mail::raw("Your verification code is: $otp", function ($message) use ($user) {
+            $message->to($user->email)
+                ->subject('Verification Code');
+        });
+    } catch (\Exception $e) {
+        // ما بنوقف النظام إذا فشل الإيميل
+        Log::error('Email failed: ' . $e->getMessage());
+    }
+
+    return response()->json([
+        'message' => 'OTP sent successfully'
+    ]);
+}
 
 
 }
