@@ -14,7 +14,7 @@ class OtpService
             'user_id' => $user->id,
             'otp_code' => $otp,
             'expires_at' => now()->addMinutes(10),
-            'is_used' => false,
+        
         ]);
 
         return $otp;
