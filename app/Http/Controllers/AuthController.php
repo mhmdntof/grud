@@ -40,20 +40,8 @@ class AuthController extends Controller
     }
 
 
-public function logina(LoginRequest $request)
-{
-    $result = $this->authService->login(
-        $request->validated()
-    );
 
-    if (isset($result['error'])) {
-        return response()->json([
-            'message' => $result['error']
-        ], 400);
-    }
-
-    return response()->json($result);
-}
+   
 
 
 
@@ -196,68 +184,10 @@ public function login(LoginRequest $request)
         ]
     ]);
 }
-public function logout(Request $request)
-{
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return response()->json([
-        'message' => 'Logged out'
-    ]);
-}
 
 
 
-//تسجيل دخول الويب 
 
-public function loginWeb(LoginRequest $request)
-{
-    $result = $this->authService->loginWeb(
-        $request->validated()
-    );
-
-    if (isset($result['error'])) {
-        return response()->json([
-            'message' => $result['error']
-        ], 401);
-    }
-
-    $request->session()->regenerate();
-
-    return response()->json([
-        'message' => 'Login successful'
-    ]);
-}
-
-
-
-public function me()
-{
-    $user = Auth::user();
-
-    return response()->json([
-        'id' => $user->id,
-        'name' => $user->name,
-        'email' => $user->email,
-        'role' => $user->role->name,
-    ]);
-}
-
-// 
-
-//
-  // public function me(Request $request)
-//{
-// /** @var \App\Models\User $user */
-//$user = $request->user();
-
-//return response()->json([
-  //  'id' => $user->id,
-    //'name' => $user->name,
-    //'email' => $user->email,
-//]);
-//}
 
 
 }
