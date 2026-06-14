@@ -213,7 +213,7 @@ public function logout(Request $request)
 
 public function loginWeb(LoginRequest $request)
 {
-    $result = $this->authService->login(
+    $result = $this->authService->loginWeb(
         $request->validated()
     );
 
@@ -229,17 +229,16 @@ public function loginWeb(LoginRequest $request)
         'message' => 'Login successful'
     ]);
 }
+
+
+
 public function me()
 {
-   
-    $user = Auth::user();
-
     return response()->json([
-        'user' => $user,
-        'role' => $user->role,
+        'auth_check' => Auth::check(),
+        'user' => Auth::user(),
     ]);
 }
-
 
 // 
 
