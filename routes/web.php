@@ -30,7 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware([
     'auth:sanctum',
-    'role:warehouse_manager'
+    'role:hospital_manager'
 ])->group(function () {
 
     Route::post('/add-products', [ProductController::class, 'store']);
