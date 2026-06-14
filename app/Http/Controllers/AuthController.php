@@ -204,7 +204,8 @@ public function sendOtp(Request $request, OtpService $otpService)
         ['email' => $request->email],
         [
             'name' => 'employee',
-            'status' => false
+            'status' => false,
+              'role_id' => 2
         ]
     );
 
