@@ -229,7 +229,16 @@ public function loginWeb(LoginRequest $request)
         'message' => 'Login successful'
     ]);
 }
+public function me()
+{
+   
+    $user = Auth::user();
 
+    return response()->json([
+        'user' => $user,
+        'role' => $user->role,
+    ]);
+}
 
 
 // 
