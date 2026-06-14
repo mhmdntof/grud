@@ -194,24 +194,16 @@ public function login(LoginRequest $request)
 
 public function sendOtp(Request $request, OtpService $otpService)
 {
-    Log::info('1');
-
     $request->validate([
         'email' => 'required|email'
     ]);
 
-    Log::info('2');
-
     $user = User::where('email', $request->email)->first();
-
-    Log::info('3');
 
     $otp = $otpService->generate($user);
 
-    Log::info('4');
-
     return response()->json([
-        'message' => 'test'
+        'otp' => $otp
     ]);
 }
 
