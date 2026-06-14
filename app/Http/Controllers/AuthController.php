@@ -234,9 +234,13 @@ public function loginWeb(LoginRequest $request)
 
 public function me()
 {
+    $user = Auth::user();
+
     return response()->json([
-        'auth_check' => Auth::check(),
-        'user' => Auth::user(),
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'role' => $user->role->name,
     ]);
 }
 
