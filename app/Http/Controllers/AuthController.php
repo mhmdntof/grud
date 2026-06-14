@@ -194,43 +194,25 @@ public function login(LoginRequest $request)
 
 public function sendOtp(Request $request, OtpService $otpService)
 {
+    Log::info('1');
+
     $request->validate([
         'email' => 'required|email'
     ]);
 
+    Log::info('2');
+
     $user = User::where('email', $request->email)->first();
 
-    if (!$user) {
-        return response()->json([
-            'message' => 'User not found'
-        ], 404);
-    }
+    Log::info('3');
 
     $otp = $otpService->generate($user);
 
-   try {
-    Log::info('Before Mail');
-
-    Mail::raw('test', function ($message) use ($user) {
-        $message->to($user->email)
-            ->subject('test');
-    });
-
-    Log::info('After Mail');
+    Log::info('4');
 
     return response()->json([
-        'message' => 'Mail sent'
+        'message' => 'test'
     ]);
-
-} catch (\Throwable $e) {
-
-    Log::error($e->getMessage());
-
-    return response()->json([
-        'error' => $e->getMessage()
-    ], 500);
-}
-   
 }
 
 }
