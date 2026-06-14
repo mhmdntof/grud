@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_otps', function (Blueprint $table) {
-            $table->id();
-              $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-
-    $table->string('otp'); // لاحقًا ممكن نعمله hash
-
+      Schema::create('otps', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('user_id')->constrained()->onDelete('cascade');
+    $table->string('code');
     $table->timestamp('expires_at');
-            $table->timestamps();
-        });
+    $table->boolean('is_used')->default(false);
+    $table->timestamps();
+});
     }
 
     /**

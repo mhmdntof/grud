@@ -205,7 +205,7 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
 
 
 
-    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/send', [AuthController::class, 'sendOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
 
 
