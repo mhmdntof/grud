@@ -192,19 +192,35 @@ public function login(LoginRequest $request)
 
 
 
-public function sendOtp(Request $request, OtpService $otpService)
+public function sendOtp(Request $request)
 {
     $request->validate([
         'email' => 'required|email'
     ]);
 
-    $user = User::where('email', $request->email)->first();
+    try {
 
-    $otp = $otpService->generate($user);
+        Log::info('Before Mail');
 
-    return response()->json([
-        'otp' => $otp
-    ]);
+        Mail::raw('Test Email From Render', function ($message) use ($request) {
+            $message->to($request->email)
+                ->subject('Mail Test');
+        });
+
+        Log::info('After Mail');
+
+        return response()->json([
+            'message' => 'Mail sent successfully'
+        ]);
+
+    } catch (\Throwable $e) {
+
+        Log::error($e->getMessage());
+
+        return response()->json([
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
 
 }
