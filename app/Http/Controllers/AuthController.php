@@ -12,7 +12,6 @@ use App\Http\Requests\ResendOtpRequest;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-
 use App\Services\OtpService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -209,14 +208,25 @@ public function sendOtp(Request $request, OtpService $otpService)
 
     $otp = $otpService->generate($user);
 
-    Mail::raw(
-        "Your verification code is: {$otp}",
-        function ($message) use ($user) {
-            $message->to($user->email)
-                ->subject('Verification Code');
-        }
-    );
+   try {
 
+    Log::info('Before Mail');
+
+    Mail::raw('test', function ($message) use ($user) {
+        $message->to($user->email)
+            ->subject('test');
+    });
+
+    Log::info('After Mail');
+
+} catch (\Exception $e) {
+
+    Log::error($e->getMessage());
+
+    return response()->json([
+        'error' => $e->getMessage()
+    ]);
+}
     return response()->json([
         'message' => 'OTP sent successfully'
     ]);
