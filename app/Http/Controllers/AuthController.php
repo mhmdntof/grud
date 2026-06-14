@@ -209,7 +209,6 @@ public function sendOtp(Request $request, OtpService $otpService)
     $otp = $otpService->generate($user);
 
    try {
-
     Log::info('Before Mail');
 
     Mail::raw('test', function ($message) use ($user) {
@@ -219,17 +218,19 @@ public function sendOtp(Request $request, OtpService $otpService)
 
     Log::info('After Mail');
 
-} catch (\Exception $e) {
+    return response()->json([
+        'message' => 'Mail sent'
+    ]);
+
+} catch (\Throwable $e) {
 
     Log::error($e->getMessage());
 
     return response()->json([
         'error' => $e->getMessage()
-    ]);
+    ], 500);
 }
-    return response()->json([
-        'message' => 'OTP sent successfully'
-    ]);
+   
 }
 
 }
