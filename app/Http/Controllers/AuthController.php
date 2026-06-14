@@ -12,8 +12,9 @@ use App\Http\Requests\ResendOtpRequest;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Request;
+
 use App\Services\OtpService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
