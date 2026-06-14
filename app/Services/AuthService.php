@@ -403,15 +403,6 @@ public function loginًWeb(array $data)
 }
 
 
-public function me()
-{
-    /** @var User $user */
-    $user = Auth::user();
 
-    return response()->json([
-        'user' => $user,
-        'role' => $user->role,
-    ]);
-}
 
 }
