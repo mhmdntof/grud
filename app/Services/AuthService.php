@@ -16,37 +16,49 @@ use Resend\Laravel\Facades\Resend;
 
 class AuthService
 {
-    public function createUser(array $data)
-    {
-        // 1. جلب الرول
-        $role = Role::where('name', $data['role'])->firstOrFail();
+  public function createEmployee(array $data)
+{
+    $role = Role::where('name', $data['role_name'])->first();
 
-        // 2. إنشاء المستخدم (inactive)
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'role_id' => $role->id,
-            'status' => false,
-            'password' => null,
-        ]);
-
-        // 3. توليد OTP
-        $otp = rand(100000, 999999);
-
-        // 4. تخزين OTP
-        UserOtp::create([
-            'user_id' => $user->id,
-            'otp' => $otp,
-            'expires_at' => now()->addMinutes(5),
-        ]);
-
-        // 5. إرسال الإيميل
-        Mail::to($user->email)->send(new OtpMail($otp));
-
-        return true;
+    if (!$role) {
+        return [
+            'error' => 'Role not found'
+        ];
     }
 
+    $department = Department::where(
+        'name',
+        $data['department_name']
+    )->first();
 
+    if (!$department) {
+        return [
+            'error' => 'Department not found'
+        ];
+    }
+
+    $user = User::create([
+        'email' => $data['email'],
+        'role_id' => $role->id,
+        'department_id' => $department->id,
+        'status' => false,
+    ]);
+
+    $otp = rand(100000, 999999);
+
+    UserOtp::where('user_id', $user->id)->delete();
+
+    UserOtp::create([
+        'user_id' => $user->id,
+        'otp' => $otp,
+       'expires_at' => now()->addHours(24),
+    ]);
+
+    return [
+        'user' => $user,
+        'otp' => $otp,
+    ];
+}
   public function login(array $data)
 {
     // 1. البحث عن المستخدم
@@ -98,100 +110,7 @@ public function createHospitalManager(array $data)
 
 
 
-public function createEmployee(array $data)
-{
-    try {
 
-        Log::info('CREATE EMPLOYEE START', $data);
-
-        // 1. جلب الرول
-        $role = Role::where('name', $data['role'])->first();
-
-        if (!$role) {
-            return response()->json([
-                'message' => 'Role not found',
-                'role' => $data['role']
-            ], 422);
-        }
-
-        // 2. جلب القسم
-        $department = Department::where('name', $data['department'])->first();
-
-        if (!$department) {
-            return response()->json([
-                'message' => 'Department not found',
-                'department' => $data['department']
-            ], 422);
-        }
-
-        // 3. إنشاء المستخدم
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'role_id' => $role->id,
-            'department_id' => $department->id,
-            'status' => false,
-            'password' => null,
-        ]);
-
-        Log::info('USER CREATED', ['user_id' => $user->id]);
-
-        // 4. توليد OTP
-        $otp = rand(100000, 999999);
-
-        UserOtp::create([
-            'user_id' => $user->id,
-            'otp' => $otp,
-            'expires_at' => now()->addHours(24),
-        ]);
-
-        Log::info('OTP CREATED', ['otp' => $otp]);
-
-        // 5. إرسال الإيميل عبر Resend
-        try {
-
-            Log::info('RESEND MAIL START');
-
-            Resend::emails()->send([
-    'from' => 'onboarding@resend.dev',
-    'to' => 'ntofmhmd88@gmail.com',
-    'subject' => 'OTP Test',
-    'html' => '<h1>It works</h1>',
-]);
-
-            Log::info('RESEND MAIL SUCCESS');
-
-        } catch (\Throwable $e) {
-
-            Log::error('RESEND ERROR', [
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'message' => 'Employee created but email failed',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-
-        Log::info('CREATE EMPLOYEE END');
-
-        return response()->json([
-            'message' => 'Employee created and OTP sent',
-            'user' => $user
-        ]);
-
-    } catch (\Throwable $e) {
-
-        Log::error('CREATE EMPLOYEE CRASH', [
-            'error' => $e->getMessage()
-        ]);
-
-        return response()->json([
-            'message' => 'Unexpected error',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
 
 public function verifyOtp(array $data)
 {
@@ -265,53 +184,22 @@ public function verifyOtp(array $data)
 
 public function setPassword(array $data)
 {
-    // 1. جلب المستخدم عبر verification token
-    $user = User::where(
-        'verification_token',
-        $data['verification_token']
-    )->first();
+    $user = User::where('verification_token', $data['token'])->first();
 
-    // 2. تحقق من وجود المستخدم
     if (!$user) {
-
-        return [
-
-            'success' => false,
-
-            'message' => 'Invalid verification token'
-        ];
+        return ['error' => 'Invalid token'];
     }
 
-    // 3. تحديث كلمة المرور وتفعيل الحساب
     $user->update([
-
+        'name' => $data['name'],
+        'phone' => $data['phone'],
         'password' => Hash::make($data['password']),
-
         'status' => true,
-
         'verification_token' => null,
     ]);
 
-    // 4. حذف OTP
-    UserOtp::where(
-        'user_id',
-        $user->id
-    )->delete();
-
-    // 5. إنشاء access token (تسجيل دخول مباشر)
-    $token = $user->createToken(
-        'auth_token'
-    )->plainTextToken;
-
     return [
-
-        'success' => true,
-
-        'message' => 'Password created successfully',
-
-        'token' => $token,
-
-        'user' => $user,
+        'message' => 'Account activated successfully'
     ];
 }
 
