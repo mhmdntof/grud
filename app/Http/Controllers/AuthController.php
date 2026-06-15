@@ -198,29 +198,24 @@ public function sendOtp(Request $request)
         'email' => 'required|email'
     ]);
 
-    try {
+   try {
 
-        Log::info('Before Mail');
+    Mail::raw('Test Email', function ($message) use ($request) {
+        $message->to($request->email)
+            ->subject('Test');
+    });
 
-        Mail::raw('Test Email From Render', function ($message) use ($request) {
-            $message->to($request->email)
-                ->subject('Mail Test');
-        });
+    return response()->json([
+        'message' => 'Mail sent'
+    ]);
 
-        Log::info('After Mail');
+} catch (\Throwable $e) {
 
-        return response()->json([
-            'message' => 'Mail sent successfully'
-        ]);
-
-    } catch (\Throwable $e) {
-
-        Log::error($e->getMessage());
-
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
-    }
+    return response()->json([
+        'message' => $e->getMessage(),
+        'class' => get_class($e),
+    ], 500);
+}
 }
 
 }
