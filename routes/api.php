@@ -333,3 +333,37 @@ Route::get('/mail-config', function () {
         'from' => config('mail.from.address'),
     ];
 });
+
+Route::get('/smtp-test', function () {
+    try {
+
+        $connection = fsockopen(
+            'smtp.gmail.com',
+            587,
+            $errno,
+            $errstr,
+            10
+        );
+
+        if (!$connection) {
+            return [
+                'success' => false,
+                'error' => $errstr,
+                'code' => $errno,
+            ];
+        }
+
+        fclose($connection);
+
+        return [
+            'success' => true,
+            'message' => 'Connected to Gmail SMTP'
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
+});
