@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Services\OtpService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
@@ -26,23 +27,33 @@ class AuthController extends Controller
 {
     private AuthService $authService;
  private ProductService $productService;
+ private OtpService $otpService;
 
-    public function __construct(AuthService $authService,ProductService $productService)
+    public function __construct(AuthService $authService,ProductService $productService, OtpService $otpService)
     {
         $this->authService = $authService;
         $this->productService = $productService;
+         $this->otpService = $otpService;
+
     }
 
-    public function createUser(CreateUserRequest $request)
-    {
-        $this->authService->createUser(
-            $request->validated()
-        );
+   public function createEmployee(CreateEmployeeRequest $request)
+{
+    $result = $this->authService->createEmployee(
+        $request->validated()
+    );
 
+    if (isset($result['error'])) {
         return response()->json([
-            'message' => 'User created, OTP sent to email'
-        ]);
+            'message' => $result['error']
+        ], 400);
     }
+
+    return response()->json([
+        'message' => 'Employee created successfully',
+        'otp' => $result['otp'],
+    ]);
+}
 
 
 
@@ -61,80 +72,24 @@ public function createHospitalManager(CreateHospitalManagerRequest $request)
 
 }
 
-public function createEmployee(CreateEmployeeRequest $request)
-{
-    return response()->json(
-
-        $this->authService->createEmployee(
-            $request->validated()
-        )
-
-    );
-}
-
-public function verifyOtp(
-    VerifyOtpRequest $request
-)
-{
-    $result = $this->authService->verifyOtp(
-
-        $request->validated()
-
-    );
-
-    // فشل التحقق
-    if (!$result['success']) {
-
-        return response()->json([
-
-            'message' => $result['message']
-
-        ], 400);
-    }
-
-    // نجاح التحقق
-    return response()->json([
-
-        'message' => $result['message'],
-
-        'verification_token' => $result['token']
-
-    ]);
-}
 
 
-public function setPassword(
-    SetPasswordRequest $request
-)
+
+
+public function completeRegistration(SetPasswordRequest $request)
 {
     $result = $this->authService->setPassword(
-
         $request->validated()
-
     );
 
-    // فشل العملية
-    if (!$result['success']) {
-
+    if (isset($result['error'])) {
         return response()->json([
-
-            'message' => $result['message']
-
+            'message' => $result['error']
         ], 400);
     }
 
-    // نجاح العملية
-    return response()->json([
-
-        'message' => $result['message'],
-
-        'token' => $result['token'],
-
-        'user' => $result['user']
-
-    ]);
+    return response()->json($result);
 }
-
 public function resendOtp(
     ResendOtpRequest $request
 )
@@ -192,30 +147,42 @@ public function login(LoginRequest $request)
 
 
 
-public function sendOtp(Request $request)
+public function sendOtp(Request $request, OtpService $otpService)
 {
     $request->validate([
         'email' => 'required|email'
     ]);
 
-   try {
+    $user = User::where('email', $request->email)->first();
 
-    Mail::raw('Test Email', function ($message) use ($request) {
-        $message->to($request->email)
-            ->subject('Test');
-    });
+    if (!$user) {
+        return response()->json([
+            'message' => 'User not found'
+        ], 404);
+    }
+
+    $otp = $otpService->generate($user);
 
     return response()->json([
-        'message' => 'Mail sent'
+        'message' => 'OTP generated successfully',
+        'otp' => $otp,
     ]);
-
-} catch (\Throwable $e) {
-
-    return response()->json([
-        'message' => $e->getMessage(),
-        'class' => get_class($e),
-    ], 500);
 }
+
+
+public function verifyOtp(VerifyOtpRequest $request)
+{
+    $result = $this->otpService->verifyOtp(
+        $request->validated()
+    );
+
+    if (isset($result['error'])) {
+        return response()->json([
+            'message' => $result['error']
+        ], 400);
+    }
+
+    return response()->json($result);
 }
 
 }

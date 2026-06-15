@@ -49,7 +49,7 @@ Route::middleware([
     'role:hospital_manager'
 ])->group(function () {
 
-Route::post('/create-employee', [AuthController::class, 'createEmployee']);
+Route::post('/create-employee', [AuthController::class, 'generate']);
  Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::post('/add-products', [ProductController::class, 'store']);
 Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'managerApproval']
@@ -332,4 +332,38 @@ Route::get('/mail-config', function () {
         'username' => config('mail.mailers.smtp.username'),
         'from' => config('mail.from.address'),
     ];
+});
+
+Route::get('/smtp-test', function () {
+    try {
+
+        $connection = fsockopen(
+            'smtp.gmail.com',
+            587,
+            $errno,
+            $errstr,
+            10
+        );
+
+        if (!$connection) {
+            return [
+                'success' => false,
+                'error' => $errstr,
+                'code' => $errno,
+            ];
+        }
+
+        fclose($connection);
+
+        return [
+            'success' => true,
+            'message' => 'Connected to Gmail SMTP'
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
 });
