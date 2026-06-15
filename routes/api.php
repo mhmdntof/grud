@@ -323,3 +323,13 @@ Route::middleware(['auth:sanctum', 'role:department_head'])
         Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
     });
 
+Route::get('/mail-config', function () {
+    return [
+        'mailer' => config('mail.default'),
+        'host' => config('mail.mailers.smtp.host'),
+        'port' => config('mail.mailers.smtp.port'),
+        'encryption' => config('mail.mailers.smtp.encryption'),
+        'username' => config('mail.mailers.smtp.username'),
+        'from' => config('mail.from.address'),
+    ];
+});
