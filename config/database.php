@@ -84,24 +84,9 @@ return [
             ]) : [],
         ],
 
-   'pgsql' => [
+  'pgsql' => [
     'driver' => 'pgsql',
-    'host' => env('DB_HOST'),
-    'port' => env('DB_PORT'),
-    'database' => env('DB_DATABASE'),
-    'username' => env('DB_USERNAME'),
-    'password' => env('DB_PASSWORD'),
-
-    'charset' => 'utf8',
-    'prefix' => '',
-    'schema' => 'public',
-
-    'sslmode' => env('DB_SSLMODE', 'require'),
-
-    // 👇 هاد المهم
-    'options' => extension_loaded('pdo_pgsql') ? [
-        PDO::PGSQL_ATTR_DISABLE_PREPARES => false,
-    ] : [],
+    'url' => env('DATABASE_URL'),
 ],
 
         'sqlsrv' => [
