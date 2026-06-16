@@ -84,10 +84,10 @@ return [
             ]) : [],
         ],
 
-       'pgsql' => [
+   'pgsql' => [
     'driver' => 'pgsql',
     'host' => env('DB_HOST'),
-    'port' => env('DB_PORT', 5432),
+    'port' => env('DB_PORT'),
     'database' => env('DB_DATABASE'),
     'username' => env('DB_USERNAME'),
     'password' => env('DB_PASSWORD'),
@@ -96,7 +96,12 @@ return [
     'prefix' => '',
     'schema' => 'public',
 
-    'sslmode' => 'require',
+    'sslmode' => env('DB_SSLMODE', 'require'),
+
+    // 👇 هاد المهم
+    'options' => extension_loaded('pdo_pgsql') ? [
+        PDO::PGSQL_ATTR_DISABLE_PREPARES => false,
+    ] : [],
 ],
 
         'sqlsrv' => [
