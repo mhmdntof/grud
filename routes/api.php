@@ -334,36 +334,14 @@ Route::get('/mail-config', function () {
     ];
 });
 
-Route::get('/smtp-test', function () {
-    try {
+Route::get('/test-mail', function () {
 
-        $connection = fsockopen(
-            'smtp.gmail.com',
-            587,
-            $errno,
-            $errstr,
-            10
-        );
+    Mail::raw('Laravel mail test', function ($message) {
+        $message->to('ايميلك@example.com')
+                ->subject('Mail Test');
+    });
 
-        if (!$connection) {
-            return [
-                'success' => false,
-                'error' => $errstr,
-                'code' => $errno,
-            ];
-        }
-
-        fclose($connection);
-
-        return [
-            'success' => true,
-            'message' => 'Connected to Gmail SMTP'
-        ];
-
-    } catch (\Throwable $e) {
-        return [
-            'success' => false,
-            'message' => $e->getMessage()
-        ];
-    }
+    return response()->json([
+        'message' => 'Mail sent successfully'
+    ]);
 });

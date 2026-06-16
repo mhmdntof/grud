@@ -10,28 +10,29 @@ use App\Models\DepartmentProduct;
 
 class ProductService
 {
-    public function create(array $data): Product
-    {
-        return Product::create([
+   public function create(array $data): Product
+{
+    return Product::create([
+        'name' => $data['name'],
 
-            'name' => $data['name'],
+        'code' => $data['code'],
 
-            'code' => $data['code'],
+        'type' => $data['type'],
 
-            'type' => $data['type'],
+        'brand' => $data['brand'] ?? null,
 
-            'minimum_stock' => $data['minimum_stock'] ?? 0,
+        'minimum_stock' => $data['minimum_stock'] ?? 0,
 
-            'unit' => $data['unit'] ?? null,
+        'maximum_stock' => $data['maximum_stock'] ?? null,
 
-            'description' => $data['description'] ?? null,
+        'unit' => $data['unit'] ?? null,
 
-            // تبدأ الكمية من الصفر
-            'total_quantity' => 0,
-        ]);
- 
-      }
+        'description' => $data['description'] ?? null,
 
+        // تبدأ الكمية من الصفر
+        'total_quantity' => 0,
+    ]);
+}
 
 
       public function addBatch(array $data)
