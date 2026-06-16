@@ -26,6 +26,7 @@ class StoreProductRequest extends FormRequest
             'unit' => 'required|in:piece,liter,kilogram,dozen',
             
             'description' => 'nullable|string',
+            'maximum_stock' => 'required'
         ];
     }
 }
