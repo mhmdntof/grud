@@ -17,7 +17,9 @@ protected $fillable = [
     'total_quantity',
     'minimum_stock',
     'unit',
-    'description'
+    'description',
+    'brand',
+    'maximum_stock'
 ];
 
     protected $casts = [
