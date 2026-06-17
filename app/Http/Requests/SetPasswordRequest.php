@@ -18,7 +18,7 @@ class SetPasswordRequest extends FormRequest
             'verification_token' => 'required|string',
 
             'password' => 'required|string|min:6|confirmed',
-
+'phone'=>'nullable'
         ];
     }
 }
