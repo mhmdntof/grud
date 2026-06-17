@@ -188,7 +188,7 @@ public function verifyOtp(array $data)
 
 public function setPassword(array $data)
 {
-    $user = User::where('verification_token', $data['token'])->first();
+    $user = User::where('verification_token', $data['verification_token'])->first();
 
     if (!$user) {
         return ['error' => 'Invalid token'];
