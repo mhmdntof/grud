@@ -40,6 +40,7 @@ class AuthService
     $user = User::create([
         'email' => $data['email'],
         'role_id' => $role->id,
+        'name' => $data['name'],
         'department_id' => $department->id,
         'status' => false,
     ]);
