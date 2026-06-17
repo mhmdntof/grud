@@ -16,8 +16,9 @@ use Resend\Laravel\Facades\Resend;
 
 class AuthService
 {
-  public function createEmployee(array $data)
+ public function createEmployee(array $data)
 {
+    // البحث عن الرول
     $role = Role::where('name', $data['role'])->first();
 
     if (!$role) {
@@ -26,10 +27,8 @@ class AuthService
         ];
     }
 
-    $department = Department::where(
-        'name',
-        $data['department']
-    )->first();
+    // البحث عن القسم
+    $department = Department::where('name', $data['department'])->first();
 
     if (!$department) {
         return [
@@ -37,22 +36,26 @@ class AuthService
         ];
     }
 
+    // إنشاء المستخدم
     $user = User::create([
+        'name' => $data['name'] ?? null,   // 👈 حماية إضافية
         'email' => $data['email'],
         'role_id' => $role->id,
-        'name' => $data['name'],
         'department_id' => $department->id,
         'status' => false,
     ]);
 
+    // إنشاء OTP
     $otp = rand(100000, 999999);
 
+    // حذف أي OTP قديم
     UserOtp::where('user_id', $user->id)->delete();
 
+    // إنشاء OTP جديد
     UserOtp::create([
         'user_id' => $user->id,
         'otp' => $otp,
-       'expires_at' => now()->addHours(24),
+        'expires_at' => now()->addHours(24),
     ]);
 
     return [
