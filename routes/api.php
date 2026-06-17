@@ -312,7 +312,7 @@ Route::get(
 //اضافة مورد 
 Route::post(
     '/add-supplirs',
-    [ProductController::class, 'getAllDepartmentRequests']
+    [ProductController::class, 'addSupplirs']
 
 );
 
