@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Batch;
 use App\Models\Department;
 use App\Models\DepartmentProduct;
+use App\Models\Supplier;
 
 
 class ProductService
@@ -118,6 +119,27 @@ public function getAllWarehouseProducts()
     ->orderBy('name')
     ->get();
 }
+
+
+//اضافة موردين 
+
+public function createSupplier(array $data)
+{
+    return Supplier::create([
+        'name' => $data['name'],
+
+        'email' => $data['email'] ?? null,
+
+        'phone' => $data['phone'] ?? null,
+
+        'address' => $data['address'] ?? null,
+
+        'notes' => $data['notes'] ?? null,
+
+        'is_active' => $data['is_active'] ?? true,
+    ]);
+}
+
 
 }
 

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\AddBatchRequest;
 
-
+use App\Http\Requests\SupplierRequest;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 
@@ -62,6 +62,23 @@ public function getAllWarehouseProducts()
         'data' => $this->productService->getAllWarehouseProducts()
     ]);
 }
+
+
+
+//اضافة مورد 
+
+public function addSupplirs(SupplierRequest $request)
+{
+    $supplier = $this->productService->createSupplier(
+        $request->validated()
+    );
+
+    return response()->json([
+        'data' => $supplier,
+        'message' => 'Supplier created successfully'
+    ]);
+}
+
 
         }
 
