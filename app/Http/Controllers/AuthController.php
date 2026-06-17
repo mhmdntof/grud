@@ -76,7 +76,7 @@ public function createHospitalManager(CreateHospitalManagerRequest $request)
 
 
 
-public function completeRegistration(SetPasswordRequest $request)
+public function setPassword(SetPasswordRequest $request)
 {
     $result = $this->authService->setPassword(
         $request->validated()
