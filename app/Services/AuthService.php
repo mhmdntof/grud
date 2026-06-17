@@ -195,7 +195,7 @@ public function setPassword(array $data)
     }
 
     $user->update([
-        'name' => $data['name'],
+       // 'name' => $data['name'],
         'phone' => $data['phone'],
         'password' => Hash::make($data['password']),
         'status' => true,
