@@ -18,7 +18,7 @@ class AuthService
 {
   public function createEmployee(array $data)
 {
-    $role = Role::where('name', $data['name'])->first();
+    $role = Role::where('name', $data['role'])->first();
 
     if (!$role) {
         return [
@@ -28,7 +28,7 @@ class AuthService
 
     $department = Department::where(
         'name',
-        $data['department_name']
+        $data['department']
     )->first();
 
     if (!$department) {
