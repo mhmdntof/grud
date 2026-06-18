@@ -8,6 +8,7 @@ use App\Http\Requests\AddBatchRequest;
 use App\Http\Requests\SupplierRequest;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
+use App\Http\Requests\AttachSupplierToProductRequest;
 
 class ProductController extends Controller
 {
@@ -78,7 +79,25 @@ public function addSupplirs(SupplierRequest $request)
         'message' => 'Supplier created successfully'
     ]);
 }
+ //ربط المورد بالمنتج 
 
+
+ public function attachSupplier(
+    AttachSupplierToProductRequest $request
+) {
+    $result = $this->productService->attachSupplier(
+        $request->validated()
+    );
+
+    if (isset($result['error'])) {
+        return response()->json($result, 400);
+    }
+
+    return response()->json([
+        'message' => 'Supplier attached successfully.',
+        'data' => $result,
+    ], 201);
+}
 
         }
 

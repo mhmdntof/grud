@@ -316,6 +316,11 @@ Route::post(
 
 );
 
+// ربط المورد بالمادة 
+
+
+Route::post('/products/attach-supplier', [ProductController::class, 'attachSupplier']);
+
 
 
 Route::middleware(['auth:sanctum', 'role:department_head'])
