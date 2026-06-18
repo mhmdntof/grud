@@ -166,7 +166,7 @@ public function attachSupplier(array $data)
 
 public function getAllSuppliersWithProducts()
 {
-    return Supplier::select(
+    $suppliers = Supplier::select(
             'id',
             'name',
             'email',
@@ -176,19 +176,19 @@ public function getAllSuppliersWithProducts()
             'is_active'
         )
         ->with([
-            'products' => function ($query) {
-                $query->select(
-                    'products.id',
-                    'products.name',
-                    'products.code',
-                    'products.type'
-                );
-            }
+            'products:id,name,code,type'
         ])
         ->orderBy('name')
         ->get();
-}
 
+    $suppliers->each(function ($supplier) {
+        $supplier->products->each(function ($product) {
+            unset($product->pivot);
+        });
+    });
+
+    return $suppliers;
+}
 
 }
 
