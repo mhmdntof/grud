@@ -323,7 +323,7 @@ Route::post('/products/attach-supplier', [ProductController::class, 'attachSuppl
 
 //جلب الموردين مع المواد 
 
-Route::get('/suppliers', [ProductController::class, 'getAllSuppliersWithProducts']);
+Route::get('/get-all-Suppliers', [ProductController::class, 'getAllSuppliersWithProducts']);
 
 Route::middleware(['auth:sanctum', 'role:department_head'])
     ->prefix('department-head')
