@@ -7,6 +7,7 @@ use App\Models\Batch;
 use App\Models\Department;
 use App\Models\DepartmentProduct;
 use App\Models\Supplier;
+use App\Models\ProductSupplier;
 
 
 class ProductService
@@ -139,7 +140,27 @@ public function createSupplier(array $data)
         'is_active' => $data['is_active'] ?? true,
     ]);
 }
+// ربط المورد بالمنتج 
 
+public function attachSupplier(array $data)
+{
+    $exists = ProductSupplier::where('product_id', $data['product_id'])
+        ->where('supplier_id', $data['supplier_id'])
+        ->exists();
+
+    if ($exists) {
+        return [
+            'error' => 'Supplier is already attached to this product.'
+        ];
+    }
+
+    return ProductSupplier::create([
+        'product_id' => $data['product_id'],
+        'supplier_id' => $data['supplier_id'],
+        'notes' => $data['notes'] ?? null,
+        'is_primary' => $data['is_primary'] ?? false,
+    ]);
+}
 
 }
 
