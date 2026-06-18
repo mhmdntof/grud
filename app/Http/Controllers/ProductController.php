@@ -99,6 +99,18 @@ public function addSupplirs(SupplierRequest $request)
     ], 201);
 }
 
+//جلب المورد مع المواد 
+
+
+public function getAllSuppliersWithProducts()
+{
+    $suppliers = $this->productService->getAllSuppliersWithProducts();
+
+    return response()->json([
+        'data' => $suppliers
+    ]);
+}
+
         }
 
 

@@ -162,6 +162,34 @@ public function attachSupplier(array $data)
     ]);
 }
 
+//جلب المورد مع المواد 
+
+public function getAllSuppliersWithProducts()
+{
+    return Supplier::select(
+            'id',
+            'name',
+            'email',
+            'phone',
+            'address',
+            'notes',
+            'is_active'
+        )
+        ->with([
+            'products' => function ($query) {
+                $query->select(
+                    'products.id',
+                    'products.name',
+                    'products.code',
+                    'products.type'
+                );
+            }
+        ])
+        ->orderBy('name')
+        ->get();
+}
+
+
 }
 
 
