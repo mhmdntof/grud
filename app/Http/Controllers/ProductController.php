@@ -8,16 +8,22 @@ use App\Http\Requests\AddBatchRequest;
 use App\Http\Requests\SupplierRequest;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
+use App\Models\PurchaseRequest;
+use App\Services\PurchaseRequestService;
+use Illuminate\Http\Request;
 use App\Http\Requests\AttachSupplierToProductRequest;
 
 class ProductController extends Controller
 {
     protected ProductService $productService;
+    private $purchaseRequestService;
 
-    public function __construct(ProductService $productService)
+    public function __construct(ProductService $productService,PurchaseRequestService $purchaseRequestService)
     {
         $this->productService = $productService;
-    }
+        $this->purchaseRequestService = $purchaseRequestService;
+}
+    
 
     public function store(StoreProductRequest $request): JsonResponse
     {
@@ -34,14 +40,27 @@ class ProductController extends Controller
         }
 
 
-public function addBatch(AddBatchRequest $request)
+public function receive(Request $request)
 {
-    $batch = $this->productService
-        ->addBatch($request->validated());
+    $request->validate([
+        'purchase_request_id' => 'required|exists:purchase_requests,id',
+        'items' => 'required|array|min:1',
+        'items.*.product_id' => 'required|exists:products,id',
+        'items.*.batch_number' => 'required|string',
+        'items.*.quantity' => 'required|integer|min:1',
+        'items.*.expire_date' => 'required|date',
+        'items.*.purchase_price' => 'nullable|numeric'
+    ]);
+
+    $result = $this->productService->receivePurchaseRequest($request->all());
+
+    if (isset($result['error'])) {
+        return response()->json($result, 400);
+    }
 
     return response()->json([
-        'message' => 'Batch added successfully',
-        'data' => $batch
+        'message' => 'Goods received successfully',
+        'data' => $result
     ]);
 }
 

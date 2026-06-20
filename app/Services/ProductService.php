@@ -8,6 +8,9 @@ use App\Models\Department;
 use App\Models\DepartmentProduct;
 use App\Models\Supplier;
 use App\Models\ProductSupplier;
+use App\Models\PurchaseRequestItem;
+use Illuminate\Support\Facades\DB;
+use App\Models\PurchaseRequest;
 
 
 class ProductService
@@ -36,24 +39,52 @@ class ProductService
     ]);
 }
 
-
-      public function addBatch(array $data)
+public function receivePurchaseRequest(array $data)
 {
-    $batch = Batch::create([
-        'product_id' => $data['product_id'],
-        'batch_number' => $data['batch_number'],
-        'quantity' => $data['quantity'],
-        'expire_date' => $data['expire_date'],
-        'purchase_price' => $data['purchase_price'] ?? null,
-    ]);
+    return DB::transaction(function () use ($data) {
 
-    $product = Product::findOrFail($data['product_id']);
+        $request = PurchaseRequest::findOrFail($data['purchase_request_id']);
 
-    $product->total_quantity += $data['quantity'];
+        if ($request->status !== 'awaiting_delivery') {
+            return [
+                'error' => 'Request is not ready for receiving'
+            ];
+        }
 
-    $product->save();
+        foreach ($data['items'] as $item) {
 
-    return $batch;
+            $product = Product::findOrFail($item['product_id']);
+
+            // 1. إنشاء Batch مرتبط بالطلب
+            Batch::create([
+                'product_id' => $item['product_id'],
+                'purchase_request_id' => $request->id,
+                'batch_number' => $item['batch_number'],
+                'quantity' => $item['quantity'],
+                'expire_date' => $item['expire_date'],
+                'purchase_price' => $item['purchase_price'] ?? null,
+            ]);
+
+            // 2. تحديث المخزون
+            $product->increment('total_quantity', $item['quantity']);
+
+            // 3. تحديث الكمية المستلمة في item
+            PurchaseRequestItem::where('purchase_request_id', $request->id)
+                ->where('product_id', $item['product_id'])
+                ->increment('received_quantity', $item['quantity']);
+        }
+
+        // 4. تحديث حالة الطلب
+        $request->update([
+            'status' => 'completed'
+        ]);
+
+        return $request->load([
+            'items.product',
+            'supplier',
+            'requester'
+        ]);
+    });
 }
 
 
