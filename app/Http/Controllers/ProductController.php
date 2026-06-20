@@ -65,6 +65,17 @@ public function getAllWarehouseProducts()
 }
 
 
+///جلب موادالمستودع مع تاريخ اخر دفعة 
+
+
+public function getAllWarehouseProductsWith()
+{
+    return response()->json([
+        'data' => $this->productService->getAllWarehouseProductsWith()
+    ]);
+}
+
+
 
 //اضافة مورد 
 

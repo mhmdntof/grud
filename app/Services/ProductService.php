@@ -115,10 +115,46 @@ public function getAllWarehouseProducts()
         'id',
         'name',
         'type',
-        'total_quantity'
+        'total_quantity',
+        'unit'
     )
     ->orderBy('name')
     ->get();
+}
+
+//جلب مواد المستودع مع تاريخ اخر دفعة 
+
+public function getAllWarehouseProductsWith()
+{
+    $products = Product::select(
+            'id',
+            'name',
+            'type',
+            'total_quantity',
+            'minimum_stock',
+            'maximum_stock',
+            'unit'
+        )
+        ->withMax([
+            'batches as last_batch_date'
+        ], 'created_at')
+        ->orderBy('name')
+        ->get();
+
+    $products->each(function ($product) {
+
+        if ($product->total_quantity == 0) {
+            $product->status = 'Out of Stock';
+        } elseif ($product->total_quantity > $product->maximum_stock) {
+            $product->status = 'Over Stock';
+        } elseif ($product->total_quantity <= ($product->minimum_stock + 30)) {
+            $product->status = 'Low Stock';
+        } else {
+            $product->status = 'In Stock';
+        }
+    });
+
+    return $products;
 }
 
 

@@ -325,6 +325,31 @@ Route::post('/products/attach-supplier', [ProductController::class, 'attachSuppl
 
 Route::get('/get-all-Suppliers', [ProductController::class, 'getAllSuppliersWithProducts']);
 
+//جلب مواد المستودع مع تاريخ اخر دفعة 
+
+Route::get(
+    '/get/warehouse/products/with/date',
+    [ProductController::class, 'getAllWarehouseProductsWith']
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Route::middleware(['auth:sanctum', 'role:department_head'])
     ->prefix('department-head')
     ->group(function () {
