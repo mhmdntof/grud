@@ -26,6 +26,8 @@ return new class extends Migration
     $table->integer('quantity');
 
     $table->string('unit');
+     // الكمية التي وافق عليها المستودع
+   $table->integer('received_quantity')->nullable();
 
     $table->timestamps();
 });
