@@ -6,17 +6,6 @@ use Illuminate\Http\Request;
 use App\Http\Requests\Warehouse\StockInRequest;
 use App\Http\Requests\Warehouse\StockOutRequest;
 use App\Http\Requests\Warehouse\DamageRequest;
-use App\Http\Requests\Warehouse\ApproveRequest;
-use App\Http\Requests\Warehouse\RejectRequest;
-use App\Http\Requests\Warehouse\PrepareRequest;
-use App\Http\Requests\Warehouse\ReadyRequest;
-use App\Http\Requests\Warehouse\MovementFilterRequest;
-
-use App\Http\Resources\BatchResource;
-use App\Http\Resources\ProductResource;
-
-use App\Models\Batch;
-use App\Models\Product;
 
 use App\Services\WarehouseService;
 use Illuminate\Http\JsonResponse;
@@ -59,31 +48,10 @@ class WarehouseController extends Controller
 
     public function alerts(): JsonResponse
     {
-        // 1️⃣ مخزون منخفض (كل المواد)
-        $lowStock = Product::whereColumn('total_quantity', '<=', 'minimum_stock')
-            ->where('minimum_stock', '>', 0)
-            ->get();
-
-        // 2️⃣ مواد تنتهي قريباً (فقط التي لها expire_date)
-        $expiringSoon = Batch::whereNotNull('expire_date')
-            ->where('expire_date', '<=', now()->addDays(30))
-            ->where('expire_date', '>=', now())  // ✅ لم تنتهِ بعد
-            ->where('quantity', '>', 0)
-            ->with('product')
-            ->get();
-
-        // 3️⃣ مواد منتهية (فقط التي لها expire_date وانتهت)
-        $expired = Batch::whereNotNull('expire_date')
-            ->where('expire_date', '<', now())  // ✅ انتهت
-            ->where('quantity', '>', 0)
-            ->with('product')
-            ->get();
-
-        return $this->sendResponse([
-            'low_stock' => ProductResource::collection($lowStock),
-            'expiring_soon' => BatchResource::collection($expiringSoon),
-            'expired' => BatchResource::collection($expired),  // ✅ جديد
-        ], 'Alerts retrieved successfully');
+        return $this->sendResponse(
+            $this->warehouseService->getAlerts(),
+            'Alerts retrieved successfully'
+        );
     }
 
     //عرض ال Products
@@ -104,67 +72,73 @@ class WarehouseController extends Controller
     }
 
     //عرض طلبات الاقسام
-        public function requests(Request $request): JsonResponse
-    {
-        $filters = $request->only([
-            'status',
-            'department_id',
-            'type',
-            'product_id',
-            'per_page'
-        ]);
+    public function requestOrders(Request $request): JsonResponse
+{
+    $result = $this->warehouseService->getRequestOrders(
+        $request->only(['department_id', 'type', 'per_page'])
+    );
+    return $this->sendResponse($result, 'Request orders retrieved successfully');
+}
 
-        $result = $this->warehouseService->getRequests($filters);
+public function approveRequestOrder(int $id, Request $request): JsonResponse
+{
+    $request->validate([
+        'items' => 'required|array',
+        'items.*.id' => 'required|exists:request_order_items,id',
+        'items.*.approved_quantity' => 'required|integer|min:0',
+    ]);
 
-        return $this->sendResponse($result, 'Requests retrieved successfully');
-    }
+    // تحويل المصفوفة إلى [item_id => approved_quantity]
+    $approvedItems = collect($request->items)
+        ->pluck('approved_quantity', 'id')
+        ->toArray();
 
-    public function approve(ApproveRequest $request): JsonResponse
-    {
-        $result = $this->warehouseService->approveRequest(
-            $request->validated('request_id'),
-            $request->user()->id
-        );
+    $result = $this->warehouseService->approveRequestOrder(
+        $id,
+        $approvedItems,
+        $request->user()->id
+    );
+    return $this->sendResponse($result, 'Request order approved successfully');
+}
 
-        return $this->sendResponse($result, 'Request approved successfully');
-    }
+public function rejectRequestOrder(Request $request, int $id): JsonResponse
+{
+    $request->validate([
+        'rejection_reason' => 'required|string|max:1000'
+    ]);
 
-    public function reject(RejectRequest $request): JsonResponse
-    {
-        $result = $this->warehouseService->rejectRequest(
-            $request->validated('request_id'),
-            $request->user()->id,
-            $request->validated('rejection_reason')
-        );
+    $result = $this->warehouseService->rejectRequestOrder(
+        $id,
+        $request->input('rejection_reason'),
+        $request->user()->id
+    );
+    return $this->sendResponse($result, 'Request order rejected successfully');
+}
 
-        return $this->sendResponse($result, 'Request rejected successfully');
-    }
+public function prepareRequestOrder(int $id, Request $request): JsonResponse
+{
+    $result = $this->warehouseService->prepareRequestOrder(
+        $id,
+        $request->user()->id
+    );
+    return $this->sendResponse($result, 'Request order moved to in_progress successfully');
+}
 
-    public function prepare(PrepareRequest $request): JsonResponse
-    {
-        $result = $this->warehouseService->prepareRequest(
-            $request->validated('request_id'),
-            $request->user()->id
-        );
+public function readyRequestOrder(int $id, Request $request): JsonResponse
+{
+    $result = $this->warehouseService->readyRequestOrder(
+        $id,
+        $request->user()->id
+    );
+    return $this->sendResponse($result, 'Request order moved to ready successfully');
+}
 
-        return $this->sendResponse($result, 'Request moved to in_progress successfully');
-    }
-
-        public function ready(ReadyRequest $request): JsonResponse
-    {
-        $result = $this->warehouseService->readyRequest(
-            $request->validated('request_id'),
-            $request->user()->id
-        );
-
-        return $this->sendResponse($result, 'Request moved to ready successfully');
-    }
-
-    public function movements(MovementFilterRequest $request): JsonResponse
-    {
-        $filters = $request->validated();
-        $result = $this->warehouseService->getMovements($filters);
-
-        return $this->sendResponse($result, 'Movements retrieved successfully');
-    }
+public function deliverRequestOrder(int $id, Request $request): JsonResponse
+{
+    $result = $this->warehouseService->deliverRequestOrder(
+        $id,
+        $request->user()->id
+    );
+    return $this->sendResponse($result, 'Request order delivered successfully');
+}
 }

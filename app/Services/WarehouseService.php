@@ -12,6 +12,9 @@ use App\Models\Batch;
 use App\Models\Product;
 use App\Models\Request;
 use App\Models\StockMovement;
+use App\Models\RequestOrder;
+use App\Models\RequestOrderItem;
+
 use Illuminate\Support\Facades\DB;
 class WarehouseService
 {
@@ -233,189 +236,306 @@ class WarehouseService
         ];
     }
 
-    //عرض طلبات الاقسام
-    public function getRequests(array $filters = []): array
+    public function getAlerts(): array
     {
-        $query = \App\Models\Request::query()
+        $lowStock = Product::whereColumn('total_quantity', '<=', 'minimum_stock')
+            ->where('minimum_stock', '>', 0)
+            ->get();
+
+        $expiringSoon = Batch::whereNotNull('expire_date')
+            ->where('expire_date', '<=', now()->addDays(30))
+            ->where('expire_date', '>=', now())
+            ->where('quantity', '>', 0)
+            ->with('product')
+            ->get();
+
+        $expired = Batch::whereNotNull('expire_date')
+            ->where('expire_date', '<', now())
+            ->where('quantity', '>', 0)
+            ->with('product')
+            ->get();
+
+        return [
+            'low_stock' => ProductResource::collection($lowStock),
+            'expiring_soon' => BatchResource::collection($expiringSoon),
+            'expired' => BatchResource::collection($expired),
+        ];
+    }
+
+    //عرض طلبات الاقسام
+    public function getRequestOrders(array $filters = []): array
+    {
+        $query = RequestOrder::where('manager_status', 'approved')
+            ->whereIn('warehouse_status', ['pending', 'approved', 'in_progress', 'ready'])
             ->with([
-                'user:id,name',
+                'items.product:id,name,code,unit,total_quantity,minimum_stock',
                 'department:id,name',
-                'product:id,name,code,unit'
+                'requester:id,name'
             ]);
 
-        // تصفية حسب الحالة
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        // تصفية حسب القسم
         if (!empty($filters['department_id'])) {
             $query->where('department_id', $filters['department_id']);
         }
 
-        // تصفية حسب النوع
         if (!empty($filters['type'])) {
-            $query->where('type', $filters['type']);
+            $query->where('request_type', $filters['type']);
         }
 
-        // تصفية حسب المنتج
-        if (!empty($filters['product_id'])) {
-            $query->where('product_id', $filters['product_id']);
-        }
-
-        // الترتيب: الطلبات المعلقة أولاً، ثم حسب التاريخ
-        $query->orderByRaw("FIELD(status, 'pending', 'approved', 'in_progress', 'ready', 'delivered', 'rejected', 'cancelled')")
+        $query->orderByRaw("FIELD(warehouse_status, 'pending', 'approved', 'in_progress', 'ready')")
               ->orderBy('created_at', 'desc');
 
-        // التصفح
         $perPage = $filters['per_page'] ?? 15;
-
-        $requests = $query->paginate($perPage);
+        $orders = $query->paginate($perPage);
 
         return [
-            'requests' => RequestResource::collection($requests),
+            'orders' => $orders,
             'pagination' => [
-                'current_page' => $requests->currentPage(),
-                'last_page' => $requests->lastPage(),
-                'per_page' => $requests->perPage(),
-                'total' => $requests->total(),
-            ],
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total()
+            ]
         ];
     }
 
-    public function approveRequest(int $requestId, int $userId): array
+    public function approveRequestOrder(int $orderId, array $approvedItems, int $userId): array
     {
-        return DB::transaction(function () use ($requestId, $userId) {
-            $request = Request::lockForUpdate()->findOrFail($requestId);
+        return DB::transaction(function () use ($orderId, $approvedItems, $userId) {
+            $order = RequestOrder::lockForUpdate()->findOrFail($orderId);
 
-            // التحقق من أن الطلب معلق
-            if ($request->status !== 'pending') {
+            // التحقق من الحالة
+            if ($order->manager_status !== 'approved') {
+                throw new \Exception('الطلب يجب أن يكون معتمداً من مدير المستشفى أولاً');
+            }
+            if ($order->warehouse_status !== 'pending') {
                 throw new \Exception('الطلب يجب أن يكون معلقاً للموافقة عليه');
             }
 
-            // التحقق من توفر المخزون (القبول كامل أو لا شيء)
-            $product = Product::lockForUpdate()->findOrFail($request->product_id);
+            $approvedItemsData = [];
+            $rejectedItemsData = [];
 
-            if ($product->total_quantity < $request->requested_quantity) {
-                throw new \Exception(
-                    'المخزون غير كافٍ. المتوفر: ' . $product->total_quantity .
-                    ' والمطلوب: ' . $request->requested_quantity
-                );
+            // معالجة كل مادة
+            foreach ($order->items as $item) {
+                $product = Product::lockForUpdate()->find($item->product_id);
+
+                // البحث عن الكمية المعتمدة لهذه المادة
+                $approvedQty = $approvedItems[$item->id] ?? 0;
+
+                if ($approvedQty > 0 && $product->total_quantity >= $approvedQty) {
+                    // المادة موافق عليها
+                    $item->update([
+                        'approved_quantity' => $approvedQty,
+                        'rejection_reason' => null
+                    ]);
+
+                    $approvedItemsData[] = [
+                        'product_id' => $item->product_id,
+                        'product_name' => $product->name,
+                        'requested_quantity' => $item->requested_quantity,
+                        'approved_quantity' => $approvedQty,
+                        'available_quantity' => $product->total_quantity
+                    ];
+                } else {
+                    // المادة مرفوضة (كمية 0 أو مخزون غير كافٍ)
+                    $reason = $approvedQty === 0
+                        ? 'تم رفض هذه المادة'
+                        : 'المخزون غير كافٍ. المتوفر: ' . $product->total_quantity;
+
+                    $item->update([
+                        'approved_quantity' => 0,
+                        'rejection_reason' => $reason
+                    ]);
+
+                    $rejectedItemsData[] = [
+                        'product_id' => $item->product_id,
+                        'product_name' => $product->name,
+                        'requested_quantity' => $item->requested_quantity,
+                        'available_quantity' => $product->total_quantity,
+                        'reason' => $reason
+                    ];
+                }
             }
 
-            // الموافقة على الطلب
-            $request->update([
-                'status' => 'approved',
-                'approved_quantity' => $request->requested_quantity,
-            ]);
+            // تحديد حالة الطلب النهائية
+            if (empty($approvedItemsData)) {
+                // كل المواد مرفوضة
+                $order->update([
+                    'warehouse_status' => 'rejected',
+                    'rejection_reason' => 'جميع المواد مرفوضة'
+                ]);
+                throw new \Exception('تم رفض جميع المواد في الطلب');
+            }
+
+            // بعض المواد موافق عليها
+            $order->update(['warehouse_status' => 'approved']);
 
             return [
-                'request' => [
-                    'id' => $request->id,
-                    'status' => $request->status,
-                    'approved_quantity' => $request->approved_quantity,
-                    'product' => [
-                        'id' => $product->id,
-                        'name' => $product->name,
-                        'available_quantity' => $product->total_quantity,
-                    ],
-                    'department' => [
-                        'id' => $request->department->id,
-                        'name' => $request->department->name,
-                    ],
-                ],
+                'order' => $order->load([
+                    'items.product:id,name,code,unit',
+                    'department:id,name',
+                    'requester:id,name'
+                ]),
+                'approved_items' => $approvedItemsData,
+                'rejected_items' => $rejectedItemsData,
+                'message' => empty($rejectedItemsData)
+                    ? 'تمت الموافقة على جميع المواد'
+                    : 'تمت الموافقة جزئياً — بعض المواد مرفوضة'
             ];
         });
     }
 
-    public function rejectRequest(int $requestId, int $userId, string $reason): array
+    /**
+     * رفض الطلب بالكامل
+     */
+    public function rejectRequestOrder(int $orderId, string $reason, int $userId): array
     {
-        return DB::transaction(function () use ($requestId, $userId, $reason) {
-            // ✅ أقفل الصف: أي عملية أخرى تنتظر
-            $request = Request::lockForUpdate()->findOrFail($requestId);
+        return DB::transaction(function () use ($orderId, $reason, $userId) {
+            $order = RequestOrder::lockForUpdate()->findOrFail($orderId);
 
-            // التحقق من أنه لا يزال معلقاً (بعد الانتظار)
-            if ($request->status !== 'pending') {
+            if ($order->manager_status !== 'approved') {
+                throw new \Exception('الطلب يجب أن يكون معتمداً من مدير المستشفى أولاً');
+            }
+            if ($order->warehouse_status !== 'pending') {
                 throw new \Exception('الطلب يجب أن يكون معلقاً للرفض');
             }
 
-            $request->update([
-                'status' => 'rejected',
-                'rejection_reason' => $reason,
+            $order->update([
+                'warehouse_status' => 'rejected',
+                'rejection_reason' => $reason
+            ]);
+
+            // رفض جميع المواد
+            $order->items()->update([
+                'approved_quantity' => 0,
+                'rejection_reason' => $reason
             ]);
 
             return [
-                'request' => [
-                    'id' => $request->id,
-                    'status' => $request->status,
-                    'rejection_reason' => $request->rejection_reason,
-                    'product' => [
-                        'id' => $request->product->id,
-                        'name' => $request->product->name,
-                    ],
-                    'department' => [
-                        'id' => $request->department->id,
-                        'name' => $request->department->name,
-                    ],
-                ],
+                'order' => $order->load([
+                    'items.product:id,name,code,unit',
+                    'department:id,name',
+                    'requester:id,name'
+                ]),
+                'rejection_reason' => $reason,
+                'message' => 'تم رفض الطلب'
             ];
         });
     }
 
-    public function prepareRequest(int $requestId, int $userId): array
+    /**
+     * تحضير الطلب (in_progress)
+     */
+    public function prepareRequestOrder(int $orderId, int $userId): array
     {
-        return DB::transaction(function () use ($requestId, $userId) {
-            $request = Request::lockForUpdate()->findOrFail($requestId);
+        return DB::transaction(function () use ($orderId, $userId) {
+            $order = RequestOrder::lockForUpdate()->findOrFail($orderId);
 
-            if ($request->status !== 'approved') {
-                throw new \Exception('الطلب يجب أن يكون معتمداً أولاً');
+            if ($order->warehouse_status !== 'approved') {
+                throw new \Exception('الطلب يجب أن يكون معتمداً من المستودع أولاً');
             }
 
-            $request->update(['status' => 'in_progress']);
+            $order->update(['warehouse_status' => 'in_progress']);
 
             return [
-                'request' => [
-                    'id' => $request->id,
-                    'status' => $request->status,
-                    'product' => [
-                        'id' => $request->product->id,
-                        'name' => $request->product->name,
-                    ],
-                    'department' => [
-                        'id' => $request->department->id,
-                        'name' => $request->department->name,
-                    ],
-                ],
+                'order' => $order->load([
+                    'items.product:id,name,code,unit',
+                    'department:id,name',
+                    'requester:id,name'
+                ]),
+                'message' => 'الطلب قيد التنفيذ'
             ];
         });
     }
 
-    public function readyRequest(int $requestId, int $userId): array
+    /**
+     * إعلان جاهزية الطلب (ready)
+     */
+    public function readyRequestOrder(int $orderId, int $userId): array
     {
-        return DB::transaction(function () use ($requestId, $userId) {
-        // ✅ قفل الصف: أي عملية أخرى تنتظر حتى أُنهي
-            $request = Request::lockForUpdate()->findOrFail($requestId);
+        return DB::transaction(function () use ($orderId, $userId) {
+            $order = RequestOrder::lockForUpdate()->findOrFail($orderId);
 
-            // ✅ تحقق مُجدّد بعد الانتظار
-            if ($request->status !== 'in_progress') {
+            if ($order->warehouse_status !== 'in_progress') {
                 throw new \Exception('الطلب يجب أن يكون قيد التنفيذ أولاً');
             }
 
-            $request->update(['status' => 'ready']);
+            $order->update(['warehouse_status' => 'ready']);
 
             return [
-                'request' => [
-                    'id' => $request->id,
-                    'status' => $request->status,
-                    'product' => [
-                        'id' => $request->product->id,
-                        'name' => $request->product->name,
-                    ],
-                    'department' => [
-                        'id' => $request->department->id,
-                        'name' => $request->department->name,
-                    ],
-                ],
+                'order' => $order->load([
+                    'items.product:id,name,code,unit',
+                    'department:id,name',
+                    'requester:id,name'
+                ]),
+                'message' => 'الطلب جاهز للتسليم'
+            ];
+        });
+    }
+
+    /**
+     * تسليم الطلب (delivered) - مع خصم من المخزون
+     */
+    public function deliverRequestOrder(int $orderId, int $userId): array
+    {
+        return DB::transaction(function () use ($orderId, $userId) {
+            $order = RequestOrder::lockForUpdate()->findOrFail($orderId);
+
+            if ($order->warehouse_status !== 'ready') {
+                throw new \Exception('الطلب يجب أن يكون جاهزاً أولاً');
+            }
+
+            $deliveredItems = [];
+            $failedItems = [];
+
+            // تسليم كل مادة
+            foreach ($order->items as $item) {
+                if ($item->approved_quantity <= 0) continue; // تخطي المواد المرفوضة
+
+                try {
+                    // خصم من المخزون
+                    $result = $this->stockOut([
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->approved_quantity,
+                        'department_id' => $order->department_id,
+                        'request_order_id' => $order->id
+                    ], $userId);
+
+                    // تحديث الكمية المسلمة
+                    $item->update([
+                        'delivered_quantity' => $item->approved_quantity
+                    ]);
+
+                    $deliveredItems[] = [
+                        'product_id' => $item->product_id,
+                        'product_name' => $item->product->name,
+                        'approved_quantity' => $item->approved_quantity,
+                        'delivered_quantity' => $item->approved_quantity
+                    ];
+                } catch (\Exception $e) {
+                    $failedItems[] = [
+                        'product_id' => $item->product_id,
+                        'product_name' => $item->product->name,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            if (!empty($failedItems)) {
+                throw new \Exception('فشل تسليم بعض المواد: ' .
+                    collect($failedItems)->map(fn($item) => "{$item['product_name']}: {$item['error']}")->implode(', ')
+                );
+            }
+
+            $order->update(['warehouse_status' => 'delivered']);
+
+            return [
+                'order' => $order->load([
+                    'items.product:id,name,code,unit',
+                    'department:id,name',
+                    'requester:id,name'
+                ]),
+                'delivered_items' => $deliveredItems,
+                'message' => 'تم تسليم الطلب بنجاح'
             ];
         });
     }

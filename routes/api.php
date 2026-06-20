@@ -229,14 +229,15 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])
         Route::post('/damage', [WarehouseController::class, 'damage']);
         Route::get('/alerts', [WarehouseController::class, 'alerts']);
         Route::get('/products', [WarehouseController::class, 'index']);
-        Route::get('/requests', [WarehouseController::class, 'requests']);
-        // جديد: قبول/رفض الطلبات
-        Route::post('/requests/approve', [WarehouseController::class, 'approve']);
-        Route::post('/requests/reject', [WarehouseController::class, 'reject']);
-        // تحضير الطلب in_progress
-        Route::post('/requests/prepare', [WarehouseController::class, 'prepare']);
-        // الطلب جاهز ready
-        Route::post('/requests/ready', [WarehouseController::class, 'ready']);
+
+        // Request Orders
+        Route::get('/requests', [WarehouseController::class, 'requestOrders']);
+        Route::post('/requests/{id}/approve', [WarehouseController::class, 'approveRequestOrder']);
+        Route::post('/requests/{id}/reject', [WarehouseController::class, 'rejectRequestOrder']);
+        Route::post('/requests/{id}/prepare', [WarehouseController::class, 'prepareRequestOrder']);
+        Route::post('/requests/{id}/ready', [WarehouseController::class, 'readyRequestOrder']);
+        Route::post('/requests/{id}/deliver', [WarehouseController::class, 'deliverRequestOrder']);
+
         //ال CRUD Suppliers
         Route::get('/suppliers', [SupplierController::class, 'index']);
         Route::get('/suppliers/{id}', [SupplierController::class, 'show']);

@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\Product;
-use App\Models\Request;
+use App\Models\RequestOrder;
+use App\Models\RequestOrderItem;
+use App\Models\User;
+
 use Illuminate\Support\Facades\DB;
 
 class DepartmentHeadService
@@ -13,122 +15,106 @@ class DepartmentHeadService
         return DB::transaction(function () use ($data, $userId) {
             $user = \App\Models\User::findOrFail($userId);
 
-            // التحقق من أن المستخدم لديه قسم
             if (!$user->department_id) {
                 throw new \Exception('المستخدم غير مرتبط بقسم');
             }
 
-            // التحقق من أن المنتج موجود وله مخزون (اختياري: نسمح بطلب حتى لو المخزون صفر)
-            $product = Product::findOrFail($data['product_id']);
-
-            $request = Request::create([
-                'user_id' => $userId,
+            $order = RequestOrder::create([
                 'department_id' => $user->department_id,
-                'product_id' => $data['product_id'],
-                'requested_quantity' => $data['requested_quantity'],
-                'type' => $data['type'],
-                'status' => 'pending',
-                'needed_by' => $data['needed_by'] ?? null,
+                'requested_by' => $userId,
+                'request_type' => $data['request_type'],
+                'manager_status' => 'pending',
+                'warehouse_status' => 'pending',
+                'notes' => $data['notes'] ?? null,
                 'recurring_frequency' => $data['recurring_frequency'] ?? null,
             ]);
 
+            foreach ($data['items'] as $item) {
+                RequestOrderItem::create([
+                    'request_order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'requested_quantity' => $item['quantity'],
+                ]);
+            }
+
             return [
-                'request' => [
-                    'id' => $request->id,
-                    'type' => $request->type,
-                    'status' => $request->status,
-                    'requested_quantity' => $request->requested_quantity,
-                    'needed_by' => $request->needed_by,
-                    'recurring_frequency' => $request->recurring_frequency,
-                    'created_at' => $request->created_at,
-
-                // المنتج - بدون total_quantity!
-                'product' => [
-                'id' => $request->product->id,
-                'name' => $request->product->name,
-                'code' => $request->product->code,
-                'unit' => $request->product->unit,
-                ],
-
-                // القسم
-                'department' => [
-                'id' => $request->department->id,
-                'name' => $request->department->name,
-                ],
-            ],
-    ];
+                'order' => $order->load([
+                    'items.product:id,name,code,unit',
+                    'department:id,name',
+                    'requester:id,name'
+                ])
+            ];
         });
     }
 
     public function getMyRequests(int $userId, array $filters = []): array
     {
-        $query = Request::where('user_id', $userId)
-            ->with(['product:id,name,code,unit', 'department:id,name']);
+        $query = RequestOrder::where('requested_by', $userId)
+            ->with([
+                'items.product:id,name,code,unit',
+                'department:id,name',
+                'requester:id,name'
+            ]);
 
-        // تصفية حسب الحالة
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+        // فلترة حسب النوع
+        if (!empty($filters['type'])) {
+            $query->where('request_type', $filters['type']);
         }
 
-        // تصفية حسب النوع
-        if (!empty($filters['type'])) {
-            $query->where('type', $filters['type']);
+        // فلترة حسب الحالة
+        if (!empty($filters['status'])) {
+            $status = $filters['status'];
+            $query->where(function ($q) use ($status) {
+                $q->where('manager_status', $status)
+                  ->orWhere('warehouse_status', $status);
+            });
         }
 
         $query->orderBy('created_at', 'desc');
-
         $perPage = $filters['per_page'] ?? 15;
-        $requests = $query->paginate($perPage);
+        $orders = $query->paginate($perPage);
 
         return [
-            'requests' => \App\Http\Resources\RequestResource::collection($requests),
+            'requests' => $orders,
             'pagination' => [
-                'current_page' => $requests->currentPage(),
-                'last_page' => $requests->lastPage(),
-                'per_page' => $requests->perPage(),
-                'total' => $requests->total(),
-            ],
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total()
+            ]
         ];
     }
 
-    public function cancelRequest(int $requestId, int $userId): array
+    /**
+     * إلغاء طلب (فقط إذا كان pending)
+     */
+    public function cancelRequest(int $orderId, int $userId): array
     {
-        return DB::transaction(function () use ($requestId, $userId) {
-            // ✅ قفل الصف
-            $request = Request::lockForUpdate()
-                ->where('id', $requestId)
-                ->where('user_id', $userId)
+        return DB::transaction(function () use ($orderId, $userId) {
+            $order = RequestOrder::lockForUpdate()
+                ->where('id', $orderId)
+                ->where('requested_by', $userId)
                 ->first();
 
-            if (!$request) {
+            if (!$order) {
                 throw new \Exception('الطلب غير موجود أو لا تملك صلاحية الوصول إليه');
             }
 
-            if (!in_array($request->status, ['pending', 'approved'])) {
+            if ($order->manager_status !== 'pending') {
                 throw new \Exception('لا يمكن إلغاء طلب تمت معالجته');
             }
 
-            $request->update(['status' => 'cancelled']);
-
-            $request->load(['product:id,name,code,unit', 'department:id,name']);
+            $order->update([
+                'manager_status' => 'cancelled',
+                'warehouse_status' => 'cancelled'
+            ]);
 
             return [
-                'request' => [
-                    'id' => $request->id,
-                    'type' => $request->type,
-                    'status' => $request->status,
-                    'requested_quantity' => $request->requested_quantity,
-                    'product' => [
-                        'id' => $request->product->id,
-                        'name' => $request->product->name,
-                        'code' => $request->product->code,
-                        'unit' => $request->product->unit,
-                    ],
-                    'department' => [
-                        'id' => $request->department->id,
-                        'name' => $request->department->name,
-                    ],
-                ],
+                'order' => $order->load([
+                    'items.product:id,name,code,unit',
+                    'department:id,name',
+                    'requester:id,name'
+                ])
             ];
         });
     }

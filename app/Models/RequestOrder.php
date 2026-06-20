@@ -9,11 +9,17 @@ class RequestOrder extends Model
     protected $fillable = [
         'department_id',
         'requested_by',
-        'manager_status',
         'request_type',
+        'manager_status',
         'warehouse_status',
         'rejection_reason',
-        'request_type'
+        'notes',
+        'recurring_frequency'
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function items()
@@ -29,5 +35,22 @@ class RequestOrder extends Model
     public function requester()
     {
         return $this->belongsTo(User::class, 'requested_by');
+    }
+
+    // Scopes مفيدة
+    public function scopePendingManager($query)
+    {
+        return $query->where('manager_status', 'pending');
+    }
+
+    public function scopePendingWarehouse($query)
+    {
+        return $query->where('manager_status', 'approved')
+                     ->where('warehouse_status', 'pending');
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('warehouse_status', 'approved');
     }
 }

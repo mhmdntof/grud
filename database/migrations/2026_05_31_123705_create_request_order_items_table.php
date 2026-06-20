@@ -22,7 +22,17 @@ return new class extends Migration
             ->constrained()
             ->onDelete('cascade');
 
-        $table->integer('quantity');
+            // الكمية المطلوبة من رئيس القسم
+            $table->integer('requested_quantity');
+
+            // الكمية المعتمدة من مدير المستودع (قد تكون أقل)
+            $table->integer('approved_quantity')->nullable();
+
+            // الكمية المسلمة فعلياً
+            $table->integer('delivered_quantity')->nullable();
+
+            // سبب رفض مادة معينة (اختياري)
+            $table->text('rejection_reason')->nullable();
 
         $table->timestamps();
     });

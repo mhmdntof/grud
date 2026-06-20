@@ -30,7 +30,7 @@ class RequestOrderService
     });
 }
 
-//موافقة مدير المشفى على طلب القسم 
+//موافقة مدير المشفى على طلب القسم
 
 public function managerApproval(
     int $requestId,
@@ -65,7 +65,7 @@ public function managerApproval(
     return $requestOrder;
 }
 
-//موافقة المستودع على طلب القسم 
+//موافقة المستودع على طلب القسم
 
 public function warehouseApproval(
     int $requestId,
@@ -162,7 +162,7 @@ public function warehouseApproval(
     });
 }
 
-//طلبات الادمن المستعجلة 
+//طلبات الادمن المستعجلة
 public function getPendingUrgentRequests()
 {
     return RequestOrder::with([
@@ -191,7 +191,7 @@ public function getPendingNormalRequests()
     ->get();
 }
 
-// طلبات رئيس المستودع العادية 
+// طلبات رئيس المستودع العادية
 
 public function getWarehousePendingNormalRequests()
 {
@@ -209,7 +209,7 @@ public function getWarehousePendingNormalRequests()
 
 
 
-//طلبات رئيس المستودع المستعجلة 
+//طلبات رئيس المستودع المستعجلة
 
 public function getWarehousePendingUrgentRequests()
 {
@@ -225,7 +225,7 @@ public function getWarehousePendingUrgentRequests()
     ->get();
 }
 
-// تفاصيل طلب المستودع 
+// تفاصيل طلب المستودع
 
 public function getRequestOrderById($id)
 {
@@ -235,4 +235,60 @@ public function getRequestOrderById($id)
         'items.product'
     ])->findOrFail($id);
 }
+
+    public function getMyRequests(int $userId, array $filters = []): array
+    {
+        $query = RequestOrder::where('requested_by', $userId)
+            ->with(['items.product:id,name,code,unit', 'department:id,name']);
+
+        if (!empty($filters['status'])) {
+            // status = manager_status أو warehouse_status حسب السياق
+            $query->where('manager_status', $filters['status']);
+        }
+
+        if (!empty($filters['type'])) {
+            $query->where('request_type', $filters['type']);
+        }
+
+        $query->orderBy('created_at', 'desc');
+
+        $perPage = $filters['per_page'] ?? 15;
+        $orders = $query->paginate($perPage);
+
+        return [
+            'requests' => $orders,
+            'pagination' => [
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+            ],
+        ];
+    }
+
+    public function cancel(int $orderId, int $userId): array
+    {
+        return DB::transaction(function () use ($orderId, $userId) {
+            $order = RequestOrder::lockForUpdate()
+                ->where('id', $orderId)
+                ->where('requested_by', $userId)
+                ->first();
+
+            if (!$order) {
+                throw new \Exception('الطلب غير موجود أو لا تملك صلاحية الوصول إليه');
+            }
+
+            // يمكن الإلغاء فقط قبل موافقة المدير
+            if ($order->manager_status !== 'pending') {
+                throw new \Exception('لا يمكن إلغاء طلب تمت معالجته');
+            }
+
+            $order->update(['manager_status' => 'cancelled']);
+
+            return ['order' => $order->load(['items.product', 'department'])];
+        });
+    }
+
+
+
 }

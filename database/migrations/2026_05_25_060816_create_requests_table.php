@@ -11,9 +11,9 @@ return new class extends Migration
         Schema::create('requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()
-                                        ->restrictOnDelete(); // لا تحذف المستخدم إذا له حركات
+                                        ->restrictOnDelete();
             $table->foreignId('department_id')->constrained()
-                                                ->restrictOnDelete(); // لا تحذف المستخدم إذا له حركات
+                                                ->restrictOnDelete();
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
             $table->integer('requested_quantity');
             $table->integer('approved_quantity')->nullable();

@@ -23,20 +23,25 @@ return new class extends Migration
         ->constrained('users')
         ->onDelete('cascade');
 
-    // normal | urgent
-    $table->string('request_type');
 
+
+    // normal | urgent
+
+    $table->enum('request_type', ['normal', 'recurring', 'urgent'])->default('normal');
     // pending | approved | rejected
     $table->string('manager_status')
         ->default('pending');
 
-    // pending | approved | rejected
-    $table->string('warehouse_status')
-        ->default('pending');
+
+        $table->enum('warehouse_status',
+     ['pending', 'approved', 'rejected', 'in_progress', 'ready', 'delivered','cancelled'])
+     ->default('pending');
 
     $table->text('rejection_reason')
         ->nullable();
 
+    $table->text('notes')->nullable();
+    $table->enum('recurring_frequency', ['daily', 'weekly', 'monthly'])->nullable();
     $table->timestamps();
 
     });

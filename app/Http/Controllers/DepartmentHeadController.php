@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Requests\DepartmentHeader\StoreRequest;
@@ -19,20 +18,16 @@ class DepartmentHeadController extends Controller
             $request->validated(),
             $request->user()->id
         );
-
-        return $this->sendResponse($result, 'Request submitted successfully', 201);
+        return $this->sendResponse($result, 'Request submitted', 201);
     }
 
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['status', 'type', 'per_page']);
-
         $result = $this->departmentHeadService->getMyRequests(
             $request->user()->id,
-            $filters
+            $request->only(['status', 'type', 'per_page'])
         );
-
-        return $this->sendResponse($result, 'Requests retrieved successfully');
+        return $this->sendResponse($result);
     }
 
     public function cancel(int $id, Request $request): JsonResponse
@@ -41,7 +36,6 @@ class DepartmentHeadController extends Controller
             $id,
             $request->user()->id
         );
-
-        return $this->sendResponse($result, 'Request cancelled successfully');
+        return $this->sendResponse($result, 'Request cancelled');
     }
 }

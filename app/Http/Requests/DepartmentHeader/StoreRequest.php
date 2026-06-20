@@ -14,25 +14,25 @@ class StoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'product_id' => 'required|exists:products,id',
-            'requested_quantity' => 'required|integer|min:1',
-            'type' => 'required|in:normal,recurring,urgent',
-            'needed_by' => 'nullable|date|after_or_equal:today',
-            'recurring_frequency' => 'nullable|required_if:type,recurring|in:daily,weekly,monthly',
+            'request_type' => 'required|in:normal,urgent,recurring',
+            'items' => 'required|array|min:1|max:5',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
             'notes' => 'nullable|string|max:1000',
+            'recurring_frequency' => 'nullable|required_if:request_type,recurring|in:daily,weekly,monthly',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'product_id.required' => 'المنتج مطلوب',
-            'product_id.exists' => 'المنتج غير موجود',
-            'requested_quantity.required' => 'الكمية المطلوبة مطلوبة',
-            'requested_quantity.min' => 'الكمية يجب أن تكون 1 على الأقل',
-            'type.required' => 'نوع الطلب مطلوب',
-            'type.in' => 'نوع الطلب يجب أن يكون: عادي، متكرر، أو مستعجل',
-            'needed_by.after_or_equal' => 'تاريخ الاستلام يجب أن يكون اليوم أو بعده',
+            'request_type.required' => 'نوع الطلب مطلوب',
+            'request_type.in' => 'نوع الطلب يجب أن يكون: عادي، مستعجل، أو متكرر',
+            'items.required' => 'المواد مطلوبة',
+            'items.min' => 'يجب إضافة مادة واحدة على الأقل',
+            'items.max' => 'لا يمكن إضافة أكثر من 5 مواد',
+            'items.*.product_id.exists' => 'المنتج غير موجود',
+            'items.*.quantity.min' => 'الكمية يجب أن تكون 1 على الأقل',
             'recurring_frequency.required_if' => 'تردد التكرار مطلوب للطلبات المتكررة',
         ];
     }

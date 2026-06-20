@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Http\Requests\CreateHospitalManagerRequest;
 use App\Services\AuthService;
 use App\Http\Requests\LoginRequest;

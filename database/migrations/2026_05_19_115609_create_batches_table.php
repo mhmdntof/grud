@@ -17,15 +17,17 @@ return new class extends Migration
     $table->foreignId('product_id')
         ->constrained()
         ->onDelete('cascade');
+        $table->foreignId('supplier_id')->nullable()->constrained()->nullOnDelete();
 
     $table->string('batch_number');
 
     $table->integer('quantity');
 
-    $table->date('expire_date');
+    $table->date('expire_date')->nullable();
 
     $table->decimal('purchase_price', 10, 2)
         ->nullable();
+        $table->text('notes')->nullable();
         $table->timestamps();
         });
     }
