@@ -24,25 +24,26 @@ return new class extends Migration
         ->constrained('suppliers')
         ->nullOnDelete();
 
-    $table->enum('request_type', [
-        'normal',
-        'urgent'
-    ]);
+    $table->string('request_type');
 
     $table->decimal('expected_budget', 12, 2);
 
     $table->text('reason');
 
-    $table->string('manager_status')
+    $table->string('status')
         ->default('pending');
 
-    $table->string('committee_status')
-        ->default('pending');
+    $table->foreignId('rejected_by')
+        ->nullable()
+        ->constrained('users')
+        ->nullOnDelete();
 
     $table->text('rejection_reason')
         ->nullable();
 
     $table->timestamps();
+
+    $table->softDeletes();
 });
     }
 

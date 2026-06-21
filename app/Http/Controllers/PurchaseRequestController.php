@@ -48,6 +48,7 @@ public function rejectManager(Request $request, $id)
 
     $result = $this->purchaseRequestService->rejectByManager(
         $id,
+       $request->user()->id,
         $request->reason
     );
 
@@ -62,12 +63,19 @@ public function rejectManager(Request $request, $id)
 
 public function approveCommittee($id)
 {
-    $request = $this->purchaseRequestService->approveByCommittee($id);
+   
+{
+    $result = $this->purchaseRequestService->approveByCommittee($id);
+
+    if (isset($result['error'])) {
+        return response()->json($result, 400);
+    }
 
     return response()->json([
         'message' => 'Request approved by committee',
-        'data' => $request
+        'data' => $result
     ]);
+}
 }
 
 
@@ -76,19 +84,27 @@ public function approveCommittee($id)
 
 public function rejectCommittee(Request $request, $id)
 {
+  
+{
     $request->validate([
         'reason' => 'nullable|string'
     ]);
 
     $result = $this->purchaseRequestService->rejectByCommittee(
         $id,
+        $request->user()->id,
         $request->reason
     );
 
+    if (isset($result['error'])) {
+        return response()->json($result, 400);
+    }
+
     return response()->json([
-        'message' => 'Request rejected by committee',
+        'message' => 'Request rejected successfully',
         'data' => $result
     ]);
+}
 }
 
 
