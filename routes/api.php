@@ -14,6 +14,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\RequestOrderController;
+use App\Http\Controllers\InventoryController;
 
 // ========================================
 // User Info (Sanctum)
@@ -45,17 +46,17 @@ Route::middleware(['auth:sanctum', 'role:hospital_manager'])->group(function () 
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
     Route::post('/add-products', [ProductController::class, 'store']);
 
-    // Request Orders - Manager Approval (من كود محمد)
+    // Request Orders - Manager Approval (  محمد)
     Route::patch('/requests/{id}/manager-approval', [RequestOrderController::class, 'managerApproval']);
     Route::patch('/request-orders/{id}/approve', [RequestOrderController::class, 'approveByManager']);
     Route::patch('/request-orders/{id}/reject', [RequestOrderController::class, 'rejectByManager']);
 
-    // Request Orders - Pending (من كود محمد)
+    // Request Orders - Pending (محمد)
     Route::get('/request-orders/pending/normal', [RequestOrderController::class, 'getPendingNormalRequests']);
     Route::get('/request-orders/pending/urgent', [RequestOrderController::class, 'getPendingUrgentRequests']);
     Route::get('/request-orders/in-progress', [RequestOrderController::class, 'getInProgressRequests']);
 
-    // Purchase Requests (من كود محمد)
+    // Purchase Requests ( محمد)
     Route::patch('/purchase-requests/{id}/approve', [PurchaseRequestController::class, 'approveManager']);
     Route::patch('/purchase-requests/{id}/reject', [PurchaseRequestController::class, 'rejectManager']);
     Route::get('/purchase-requests/manager/pending/urgent', [PurchaseRequestController::class, 'pendingManagerUrgent']);
@@ -63,26 +64,26 @@ Route::middleware(['auth:sanctum', 'role:hospital_manager'])->group(function () 
 });
 
 // ========================================
-// Warehouse Manager Routes
+// Warehouse Manager Routes محمد
 // ========================================
 Route::middleware(['auth:sanctum', 'role:warehouse_manager'])->group(function () {
-    // Products & Batches (من كود محمد)
+    // Products & Batches (  محمد)
     Route::post('/add-products', [ProductController::class, 'store']);
     Route::post('/add-batch', [ProductController::class, 'addBatch']);
 
-    // Request Orders - Warehouse Approval (من كود محمد)
+    // Request Orders - Warehouse Approval (  محمد)
     Route::post('/requests/{id}/warehouse-approval', [RequestOrderController::class, 'warehouseApproval']);
     Route::patch('/request-orders/{id}/warehouse-approve', [RequestOrderController::class, 'approveByWarehouse']);
     Route::patch('/request-orders/{id}/warehouse-reject', [RequestOrderController::class, 'rejectByWarehouse']);
 
-    // Request Orders - Pending (من كود محمد)
+    // Request Orders - Pending (  محمد)
     Route::get('/warehouse-requests/pending/normal', [RequestOrderController::class, 'warehousePendingNormal']);
     Route::get('/warehouse-requests/pending/urgent', [RequestOrderController::class, 'warehousePendingUrgent']);
 
-    // Purchase Requests (من كود محمد)
+    // Purchase Requests (  محمد)
     Route::post('/purchase-requests', [PurchaseRequestController::class, 'store']);
 
-    // ✅ كود جعفر الاحترافي (Warehouse System)
+    //   جعفر  (Warehouse System)
     Route::prefix('warehouse')->group(function () {
         Route::post('/stock-in', [WarehouseController::class, 'stockIn']);
         Route::post('/stock-out', [WarehouseController::class, 'stockOut']);
@@ -91,14 +92,13 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])->group(function ()
         Route::get('/products', [WarehouseController::class, 'index']);
         Route::get('/requests', [WarehouseController::class, 'requestOrders']);
 
-        // ✅ دوالك الاحترافية (approve, reject, prepare, ready, deliver)
-        Route::post('/requests/approve', [WarehouseController::class, 'approve']);
-        Route::post('/requests/reject', [WarehouseController::class, 'reject']);
-        Route::post('/requests/prepare', [WarehouseController::class, 'prepare']);
-        Route::post('/requests/ready', [WarehouseController::class, 'ready']);
-        Route::post('/requests/deliver', [WarehouseController::class, 'deliver']);
-
-        // ✅ Suppliers CRUD (من كودك)
+        //  جعفر  (approve, reject, prepare, ready, deliver)
+        Route::post('/requests/{id}/approve', [WarehouseController::class, 'approveRequestOrder']);
+        Route::post('/requests/{id}/reject', [WarehouseController::class, 'rejectRequestOrder']);
+        Route::post('/requests/{id}/prepare', [WarehouseController::class, 'prepareRequestOrder']);
+        Route::post('/requests/{id}/ready', [WarehouseController::class, 'readyRequestOrder']);
+        Route::post('/requests/{id}/deliver', [WarehouseController::class, 'deliverRequestOrder']);
+        //  Suppliers CRUD ( جعفر)
         Route::get('/suppliers', [SupplierController::class, 'index']);
         Route::get('/suppliers/{id}', [SupplierController::class, 'show']);
         Route::post('/suppliers', [SupplierController::class, 'store']);
@@ -106,8 +106,18 @@ Route::middleware(['auth:sanctum', 'role:warehouse_manager'])->group(function ()
         Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
         Route::post('/suppliers/{id}/restore', [SupplierController::class, 'restore']);
 
-        // ✅ Movements Archive (من كودك)
+        //  Movements Archive ( جعفر)
         Route::get('/movements', [WarehouseController::class, 'movements']);
+    });
+
+        //  نظام الجرد (WS-9)
+    Route::prefix('inventory')->group(function () {
+        Route::get('/', [InventoryController::class, 'index']);
+        Route::post('/', [InventoryController::class, 'store']);
+        Route::get('/{id}', [InventoryController::class, 'show']);
+        Route::post('/{id}/record', [InventoryController::class, 'recordQuantities']);
+        Route::post('/{id}/complete', [InventoryController::class, 'complete']);
+        Route::post('/{id}/approve', [InventoryController::class, 'approve']);
     });
 });
 
@@ -123,27 +133,31 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])->group(funct
 // Department Head Routes
 // ========================================
 Route::middleware(['auth:sanctum', 'role:department_head'])->group(function () {
-    // Request Orders (من كود محمد)
+    // Request Orders (  محمد)
     Route::post('/request-items', [RequestOrderController::class, 'store']);
 
-    // Purchase Requests (من كود محمد)
+    // Purchase Requests (  محمد)
     Route::get('/purchase-requests/committee/pending/urgent', [PurchaseRequestController::class, 'pendingCommitteeUrgent']);
     Route::get('/purchase-requests/committee/pending/normal', [PurchaseRequestController::class, 'pendingCommitteeNormal']);
 
-    // Delivery Confirmation (من كود محمد)
+    // Delivery Confirmation (  محمد)
     Route::patch('/request-orders/{id}/confirm-delivery', [RequestOrderController::class, 'confirmDelivery']);
     Route::patch('/request-orders/{id}/reject-delivery', [RequestOrderController::class, 'rejectDelivery']);
 
-    // ✅ كود جعفر الاحترافي (Department Head System)
+    //   جعفر  (Department Head System)
     Route::prefix('department-head')->group(function () {
         Route::post('/requests', [DepartmentHeadController::class, 'store']);
         Route::get('/requests', [DepartmentHeadController::class, 'index']);
         Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
-    });
+        Route::put('/requests/{id}', [DepartmentHeadController::class, 'update']);
+        Route::get('/available-products', [DepartmentHeadController::class, 'availableProducts']);
+        Route::post('/requests/{id}/confirm-receipt', [DepartmentHeadController::class, 'confirmReceipt']); //تأكيد الكمية المستلمة
+        Route::post('/return-request', [DepartmentHeadController::class, 'returnRequest']);
+        });
 });
 
 // ========================================
-// Public Routes (General - من كود محمد)
+// Public Routes (General -   محمد)
 // ========================================
 Route::get('/purchase-requests/{id}', [PurchaseRequestController::class, 'show'])->middleware('auth:sanctum');
 Route::get('/request-orders/{id}', [RequestOrderController::class, 'show']);
@@ -159,7 +173,7 @@ Route::get('/get-all-Suppliers', [ProductController::class, 'getAllSuppliersWith
 Route::get('/get/warehouse/products/with/date', [ProductController::class, 'getAllWarehouseProductsWith']);
 
 // ========================================
-// Test Routes (Development Only - من كود محمد)
+// Test Routes (Development Only -   محمد)
 // ========================================
 Route::get('/test-resend-key', function () {
     return env('RESEND_API_KEY');

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\Warehouse\StockInRequest;
 use App\Http\Requests\Warehouse\StockOutRequest;
 use App\Http\Requests\Warehouse\DamageRequest;
+use App\Http\Requests\Warehouse\MovementFilterRequest;
 
 use App\Services\WarehouseService;
 use Illuminate\Http\JsonResponse;
@@ -140,5 +141,12 @@ public function deliverRequestOrder(int $id, Request $request): JsonResponse
         $request->user()->id
     );
     return $this->sendResponse($result, 'Request order delivered successfully');
+}
+
+public function movements(MovementFilterRequest $request): JsonResponse
+{
+    $filters = $request->validated();
+    $result = $this->warehouseService->getMovements($filters);
+    return $this->sendResponse($result, 'Movements retrieved successfully');
 }
 }

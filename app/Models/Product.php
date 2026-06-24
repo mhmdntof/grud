@@ -15,6 +15,7 @@ protected $fillable = [
     'code',
     'type',
     'total_quantity',
+    'reserved_quantity',
     'minimum_stock',
     'unit',
     'description',
@@ -24,6 +25,7 @@ protected $fillable = [
 
     protected $casts = [
         'total_quantity' => 'integer',
+        'reserved_quantity' => 'integer',
         'minimum_stock' => 'integer',
     ];
 
@@ -57,6 +59,9 @@ public function departments()
         return $this->hasMany(Request::class);
     }
 
-
+    public function getAvailableQuantityAttribute(): int
+    {
+        return $this->total_quantity - ($this->reserved_quantity ?? 0);
+    }
 
 }

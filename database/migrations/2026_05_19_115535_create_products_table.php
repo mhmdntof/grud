@@ -15,12 +15,13 @@ return new class extends Migration
             $table->string('type');
             $table->string('brand')->nullable();
             $table->integer('total_quantity')->default(0);
+            $table->integer('reserved_quantity')->default(0)->comment('الكمية المحجوزة لطلبات موافق عليها');
             $table->integer('minimum_stock')->default(0);
             $table->integer('maximum_stock')->default(0);
             $table->string('unit')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();
-            $table->softDeletes(); // ✅ نحتفظ بـ softDeletes
+            $table->softDeletes();
         });
     }
 

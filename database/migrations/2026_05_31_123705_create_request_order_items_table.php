@@ -15,7 +15,9 @@ return new class extends Migration
 
             $table->integer('requested_quantity');
             $table->integer('approved_quantity')->nullable();
+            $table->integer('reserved_quantity')->nullable()->comment('الكمية المحجوزة فعلياً');
             $table->integer('delivered_quantity')->nullable();
+            $table->integer('received_quantity')->nullable();
             $table->text('rejection_reason')->nullable();
 
             $table->timestamps();

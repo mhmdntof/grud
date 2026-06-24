@@ -11,14 +11,18 @@ class RequestOrderItem extends Model
         'product_id',
         'requested_quantity',
         'approved_quantity',
+        'reserved_quantity',
         'delivered_quantity',
+        'received_quantity',
         'rejection_reason'
     ];
 
     protected $casts = [
         'requested_quantity' => 'integer',
         'approved_quantity' => 'integer',
+        'reserved_quantity' => 'integer',
         'delivered_quantity' => 'integer',
+        'received_quantity' => 'integer'
     ];
 
     public function requestOrder()

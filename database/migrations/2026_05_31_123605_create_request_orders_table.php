@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('department_id')->constrained()->onDelete('cascade');
             $table->foreignId('requested_by')->constrained('users')->onDelete('cascade');
 
-            $table->enum('request_type', ['normal', 'recurring', 'urgent'])->default('normal');
+            $table->enum('request_type', ['normal', 'recurring', 'urgent','return'])->default('normal');
             $table->string('manager_status')->default('pending');
             $table->enum('warehouse_status', [
                 'pending', 'approved', 'rejected',

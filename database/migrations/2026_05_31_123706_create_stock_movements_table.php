@@ -23,6 +23,9 @@ return new class extends Migration
             $table->foreignId('request_id')->nullable()
                                             ->constrained()
                                             ->nullOnDelete();
+            $table->foreignId('request_order_id')->nullable()
+                                                    ->constrained()
+                                                    ->nullOnDelete();
             $table->enum('type', ['in', 'out', 'adjustment', 'damage']);
             $table->integer('quantity');
             $table->text('notes')->nullable();

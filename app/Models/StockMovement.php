@@ -10,7 +10,7 @@ class StockMovement extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['user_id', 'department_id', 'product_id', 'batch_id','request_id', 'type', 'quantity', 'notes'];
+    protected $fillable = ['user_id', 'department_id', 'product_id', 'batch_id','request_id','request_order_id', 'type', 'quantity', 'notes'];
 
     protected $casts = ['quantity' => 'integer'];
 
