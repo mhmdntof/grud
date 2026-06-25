@@ -47,7 +47,6 @@ public function receivePurchaseRequest(array $data)
 
         $request = PurchaseRequest::with('items')->findOrFail($data['purchase_request_id']);
 
-        // ✔️ شرط البداية: لازم يكون جاهز للاستلام
         if ($request->status !== 'awaiting_delivery') {
             return [
                 'error' => 'Request is not ready for receiving'
@@ -60,6 +59,7 @@ public function receivePurchaseRequest(array $data)
 
             Batch::create([
                 'product_id' => $item['product_id'],
+                'supplier_id' => $data['supplier_id'] ?? null, // ✔️ هون الإضافة
                 'batch_number' => $item['batch_number'],
                 'quantity' => $item['quantity'],
                 'expire_date' => $item['expire_date'],
@@ -74,7 +74,6 @@ public function receivePurchaseRequest(array $data)
                 ->increment('received_quantity', $item['quantity']);
         }
 
-        // ✔️ تحديث الحالة بعد الاستلام
         $request->update([
             'status' => 'delivered'
         ]);
@@ -84,7 +83,6 @@ public function receivePurchaseRequest(array $data)
         ];
     });
 }
-
 //جلب مواد المستودع الرئيسي 
 
 public function getWarehouseProducts(string $type)
