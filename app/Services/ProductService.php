@@ -46,7 +46,7 @@ public function receivePurchaseRequest(array $data)
         $request = PurchaseRequest::with('items')->findOrFail($data['purchase_request_id']);
 
         // 🔴 تأكد الحالة
-        if ($request->committee_status !== 'awaiting_delivery') {
+        if ($request->status !== 'awaiting_delivery') {
             return [
                 'error' => 'Request is not approved by committee yet'
             ];
