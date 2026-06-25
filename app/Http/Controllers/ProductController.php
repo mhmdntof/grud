@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\AddBatchRequest;
-
+use App\Http\Requests\ReceivePurchaseRequest;
 use App\Http\Requests\SupplierRequest;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
@@ -40,28 +40,15 @@ class ProductController extends Controller
         }
 
 
-public function receive(Request $request)
+public function receive(ReceivePurchaseRequest $request)
 {
-    $request->validate([
-        'purchase_request_id' => 'required|exists:purchase_requests,id',
-        'items' => 'required|array|min:1',
-        'items.*.product_id' => 'required|exists:products,id',
-        'items.*.batch_number' => 'required|string',
-        'items.*.quantity' => 'required|integer|min:1',
-        'items.*.expire_date' => 'required|date',
-        'items.*.purchase_price' => 'nullable|numeric'
-    ]);
-
-    $result = $this->productService->receivePurchaseRequest($request->all());
-
-    if (isset($result['error'])) {
-        return response()->json($result, 400);
-    }
+    $result = $this->productService->receivePurchaseRequest($request->validated());
 
     return response()->json([
         'message' => 'Goods received successfully',
         'data' => $result
     ]);
+
 }
 
 //جلب مواد المستودع الرئيسي
