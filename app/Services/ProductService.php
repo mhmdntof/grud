@@ -39,49 +39,51 @@ class ProductService
     ]);
 }
 
+
+
 public function receivePurchaseRequest(array $data)
 {
     return DB::transaction(function () use ($data) {
 
         $request = PurchaseRequest::with('items')->findOrFail($data['purchase_request_id']);
 
+        // ✔️ شرط البداية: لازم يكون جاهز للاستلام
+        if ($request->status !== 'awaiting_delivery') {
+            return [
+                'error' => 'Request is not ready for receiving'
+            ];
+        }
+
         foreach ($data['items'] as $item) {
 
             $product = Product::findOrFail($item['product_id']);
 
-            // ✔️ إنشاء Batch (حسب جدولك فقط)
             Batch::create([
                 'product_id' => $item['product_id'],
                 'batch_number' => $item['batch_number'],
                 'quantity' => $item['quantity'],
                 'expire_date' => $item['expire_date'],
                 'purchase_price' => $item['purchase_price'] ?? null,
+                'notes' => $item['notes'] ?? null,
             ]);
 
-            // ✔️ تحديث المخزون
             $product->increment('total_quantity', $item['quantity']);
 
-            // ✔️ تحديث الكمية المستلمة داخل items (حسب جدولك الحقيقي)
             PurchaseRequestItem::where('purchase_request_id', $request->id)
                 ->where('product_id', $item['product_id'])
                 ->increment('received_quantity', $item['quantity']);
         }
 
-        // ✔️ تحقق إذا كل المواد تم استلامها بالكامل
-       $items = $request->items()->get();
-
-$allReceived = $items->every(function ($item) {
-    return $item->received_quantity >= $item->quantity;
-});
-        return $request->load([
-            'items.product',
-            'supplier',
-            'requester'
+        // ✔️ تحديث الحالة بعد الاستلام
+        $request->update([
+            'status' => 'delivered'
         ]);
+
+        return [
+            'message' => 'Purchase request delivered successfully'
+        ];
     });
 }
-
-
 
 //جلب مواد المستودع الرئيسي 
 
