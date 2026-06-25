@@ -45,18 +45,11 @@ public function receivePurchaseRequest(array $data)
 
         $request = PurchaseRequest::with('items')->findOrFail($data['purchase_request_id']);
 
-        // 🔴 تأكد الحالة
-        if ($request->status !== 'awaiting_delivery') {
-            return [
-                'error' => 'Request is not approved by committee yet'
-            ];
-        }
-
         foreach ($data['items'] as $item) {
 
             $product = Product::findOrFail($item['product_id']);
 
-            // ✔️ إنشاء Batch بدون purchase_request_id
+            // ✔️ إنشاء Batch (حسب جدولك فقط)
             Batch::create([
                 'product_id' => $item['product_id'],
                 'batch_number' => $item['batch_number'],
@@ -68,20 +61,18 @@ public function receivePurchaseRequest(array $data)
             // ✔️ تحديث المخزون
             $product->increment('total_quantity', $item['quantity']);
 
-            // ✔️ تحديث الكمية المستلمة داخل الطلب
+            // ✔️ تحديث الكمية المستلمة داخل items (حسب جدولك الحقيقي)
             PurchaseRequestItem::where('purchase_request_id', $request->id)
                 ->where('product_id', $item['product_id'])
-                ->increment('approved_quantity', $item['quantity']);
+                ->increment('received_quantity', $item['quantity']);
         }
-$items = $request->items()->get();
+
+        // ✔️ تحقق إذا كل المواد تم استلامها بالكامل
+       $items = $request->items()->get();
 
 $allReceived = $items->every(function ($item) {
-    return $item->approved_quantity >= $item->quantity;
+    return $item->received_quantity >= $item->quantity;
 });
-        $request->update([
-            'status' => $allReceived ? 'completed' : 'partially_received'
-        ]);
-
         return $request->load([
             'items.product',
             'supplier',
