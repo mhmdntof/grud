@@ -15,6 +15,7 @@ class PurchaseRequest extends Model
         'request_type',
         'expected_budget',
         'reason',
+        'status',
         'manager_status',
         'committee_status',
         'rejection_reason',

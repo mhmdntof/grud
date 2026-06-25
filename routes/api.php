@@ -268,7 +268,9 @@ Route::post('/login', [AuthController::class, 'login']);
 //Route::post('/login-web', [AuthController::class, 'loginWeb']);
 
 
+//استلام دفعة 
 
+Route::post('/add-batch',[ProductController::class,'receive']);
 
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/set-password', [AuthController::class, 'setPassword']);
