@@ -12,7 +12,7 @@ class Batch extends Model
  
     use SoftDeletes;
 
-    protected $fillable = ['product_id', 'supplier_id',
+    protected $fillable = ['product_id', 'supplier_id','purchase_request_id',
         'batch_number', 'quantity', 'expire_date', 'purchase_price', 'notes','request-type'];
 
     protected $casts = [
