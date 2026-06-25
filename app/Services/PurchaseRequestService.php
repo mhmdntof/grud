@@ -80,7 +80,7 @@ public function approveByCommittee($id)
 {
     $request = PurchaseRequest::findOrFail($id);
 
-    if ($request->status !== 'approved') {
+    if ($request->status !== 'in_progress') {
         return [
             'error' => 'Manager must approve first'
         ];
