@@ -43,11 +43,12 @@ public function receivePurchaseRequest(array $data)
 {
     return DB::transaction(function () use ($data) {
 
-        $request = PurchaseRequest::findOrFail($data['purchase_request_id']);
+        $request = PurchaseRequest::with('items')->findOrFail($data['purchase_request_id']);
 
-        if ($request->status !== 'awaiting_delivery') {
+        // 🔴 تأكد الحالة
+        if ($request->committee_status !== 'awaiting_delivery') {
             return [
-                'error' => 'Request is not ready for receiving'
+                'error' => 'Request is not approved by committee yet'
             ];
         }
 
@@ -55,28 +56,30 @@ public function receivePurchaseRequest(array $data)
 
             $product = Product::findOrFail($item['product_id']);
 
-            // 1. إنشاء Batch مرتبط بالطلب
+            // ✔️ إنشاء Batch بدون purchase_request_id
             Batch::create([
                 'product_id' => $item['product_id'],
-                'purchase_request_id' => $request->id,
                 'batch_number' => $item['batch_number'],
                 'quantity' => $item['quantity'],
                 'expire_date' => $item['expire_date'],
                 'purchase_price' => $item['purchase_price'] ?? null,
             ]);
 
-            // 2. تحديث المخزون
+            // ✔️ تحديث المخزون
             $product->increment('total_quantity', $item['quantity']);
 
-            // 3. تحديث الكمية المستلمة في item
+            // ✔️ تحديث الكمية المستلمة داخل الطلب
             PurchaseRequestItem::where('purchase_request_id', $request->id)
                 ->where('product_id', $item['product_id'])
-                ->increment('received_quantity', $item['quantity']);
+                ->increment('approved_quantity', $item['quantity']);
         }
+$items = $request->items()->get();
 
-        // 4. تحديث حالة الطلب
+$allReceived = $items->every(function ($item) {
+    return $item->approved_quantity >= $item->quantity;
+});
         $request->update([
-            'status' => 'completed'
+            'status' => $allReceived ? 'completed' : 'partially_received'
         ]);
 
         return $request->load([
