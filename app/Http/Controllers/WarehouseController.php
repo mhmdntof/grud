@@ -15,12 +15,37 @@ use App\Models\Product;
 
 use App\Services\WarehouseService;
 use Illuminate\Http\JsonResponse;
+use App\Models\PurchaseRequest;
 
 class WarehouseController extends Controller
 {
     public function __construct(
         private WarehouseService $warehouseService
     ) {}
+
+//طلبات الشراء العادية 
+
+public function getNormalWarehouseRequests()
+{
+    return PurchaseRequest::with(['items.product', 'supplier', 'requester'])
+        ->where('request_type', 'normal')
+        ->orderBy('created_at', 'desc')
+        ->get();
+}
+
+//الطلبات المستعجلة 
+
+public function getUrgentWarehouseRequests()
+{
+    return PurchaseRequest::with(['items.product', 'supplier', 'requester'])
+        ->where('request_type', 'urgent')
+        ->orderBy('created_at', 'desc')
+        ->get();
+}
+
+
+
+
 
     public function stockIn(StockInRequest $request)
     {

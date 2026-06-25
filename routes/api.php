@@ -334,6 +334,10 @@ Route::get(
     [ProductController::class, 'getAllWarehouseProductsWith']
 );
 
+//طلبات الشراء العادية 
+
+Route::get('/get/requests/purchase/normal',[WarehouseController::class,'getNormalWarehouseRequests']);
+Route::get('/get/requests/purchase/urgent',[WarehouseController::class,'getUrgentWarehouseRequests']);
 
 
 
