@@ -45,21 +45,27 @@ public function receivePurchaseRequest(array $data)
 {
     return DB::transaction(function () use ($data) {
 
+        // ✔️ جلب الطلب مع المواد
         $request = PurchaseRequest::with('items')->findOrFail($data['purchase_request_id']);
 
+        // ✔️ التأكد من الحالة
         if ($request->status !== 'awaiting_delivery') {
             return [
                 'error' => 'Request is not ready for receiving'
             ];
         }
 
+        // ✔️ جلب المورد من الطلب (مو من الدخل)
+        $supplierId = $request->supplier_id;
+
         foreach ($data['items'] as $item) {
 
             $product = Product::findOrFail($item['product_id']);
 
+            // ✔️ إنشاء Batch
             Batch::create([
                 'product_id' => $item['product_id'],
-                'supplier_id' => $data['supplier_id'] ?? null, // ✔️ هون الإضافة
+                'supplier_id' => $supplierId,
                 'batch_number' => $item['batch_number'],
                 'quantity' => $item['quantity'],
                 'expire_date' => $item['expire_date'],
@@ -67,22 +73,27 @@ public function receivePurchaseRequest(array $data)
                 'notes' => $item['notes'] ?? null,
             ]);
 
+            // ✔️ تحديث المخزون
             $product->increment('total_quantity', $item['quantity']);
 
+            // ✔️ تحديث الكمية المستلمة
             PurchaseRequestItem::where('purchase_request_id', $request->id)
                 ->where('product_id', $item['product_id'])
                 ->increment('received_quantity', $item['quantity']);
         }
 
+        // ✔️ تحديث حالة الطلب
         $request->update([
             'status' => 'delivered'
         ]);
 
         return [
-            'message' => 'Purchase request delivered successfully'
+            'message' => 'Purchase request received successfully'
         ];
     });
 }
+
+
 //جلب مواد المستودع الرئيسي 
 
 public function getWarehouseProducts(string $type)
