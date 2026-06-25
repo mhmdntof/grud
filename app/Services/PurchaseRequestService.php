@@ -135,8 +135,8 @@ public function getPendingCommitteeUrgentRequests()
         'supplier',
         'items.product'
     ])
-    ->where('manager_status', 'approved')
-    ->where('committee_status', 'pending')
+    
+    ->where('status', 'in_progress')
     ->where('request_type', 'urgent')
     ->latest()
     ->get();
@@ -153,8 +153,8 @@ public function getPendingCommitteeNormalRequests()
         'supplier',
         'items.product'
     ])
-    ->where('manager_status', 'approved')
-    ->where('committee_status', 'pending')
+   
+    ->where('status', 'in_progress')
     ->where('request_type', 'normal')
     ->latest()
     ->get();
@@ -170,7 +170,7 @@ public function getPendingManagerUrgentRequests()
         'supplier',
         'items.product'
     ])
-    ->where('manager_status', 'pending')
+    ->where('status', 'pending')
     ->where('request_type', 'urgent')
     ->latest()
     ->get();
@@ -187,7 +187,7 @@ public function getPendingManagerNormalRequests()
         'supplier',
         'items.product'
     ])
-    ->where('manager_status', 'pending')
+    ->where('status', 'pending')
     ->where('request_type', 'normal')
     ->latest()
     ->get();
