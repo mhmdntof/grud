@@ -342,7 +342,7 @@ public function getInProgressRequests()
                     'request_order_id',
                     'product_id',
                     'quantity',
-                    'unit',
+                    
                     'approved_quantity'
                 );
             }
