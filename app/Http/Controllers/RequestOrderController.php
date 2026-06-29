@@ -149,7 +149,7 @@ public function warehousePendingUrgent()
 }
 //تفاصيل طلب المستودع 
 
-public function show($id)
+public function getRequestOrderById($id)
 {
     $requestOrder = $this->requestOrderService
         ->getRequestOrderById($id);
