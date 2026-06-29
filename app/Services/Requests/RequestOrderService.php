@@ -334,13 +334,22 @@ public function rejectDelivery(
 public function getInProgressRequests()
 {
     return RequestOrder::with([
-        'department',
-        'user',
-        'items.product'
-    ])
-    ->where('status', 'in_progress')
-    ->latest()
-    ->get();
+            'department',
+            'user',
+            'items' => function ($query) {
+                $query->select(
+                    'id',
+                    'request_order_id',
+                    'product_id',
+                    'quantity',
+                    'unit',
+                    'approved_quantity'
+                );
+            }
+        ])
+        ->where('status', 'in_progress')
+        ->latest()
+        ->get();
 }
 
 
