@@ -98,12 +98,8 @@ public function receivePurchaseRequest(array $data)
 
 public function getWarehouseProducts(string $type)
 {
-    return Product::with([
-        'batches',
-        'suppliers'
-    ])
-    ->where('type', $type)
-    ->get();
+    return Product::where('type', $type)
+        ->get();
 }
 
 //جلب مواد القسم 
