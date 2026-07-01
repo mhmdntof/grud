@@ -309,7 +309,7 @@ public function getRequestOrderById($id)
     $request = RequestOrder::with([
         'department',
         'requester',
-        'items'
+        'items.product'
     ])->findOrFail($id);
 
     return [
@@ -326,6 +326,9 @@ public function getRequestOrderById($id)
                 'quantity' => $item->quantity,
                 'unit' => $item->unit,
                 'received_quantity' => $item->received_quantity,
+
+                // ✔️ إضافة البراند
+                'brand' => $item->product->brand ?? null,
             ];
         }),
     ];
