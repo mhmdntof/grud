@@ -232,45 +232,103 @@ public function getPendingNormalRequests()
 
 public function getWarehousePendingNormalRequests()
 {
-    return RequestOrder::with([
+    $requests = RequestOrder::with([
         'department',
         'requester',
         'items.product'
     ])
-   
     ->where('status', 'in_progress')
     ->where('request_type', 'normal')
     ->latest()
     ->get();
-}
 
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'department_name' => $request->department->name ?? null,
+            'requester_name' => $request->requester->name ?? null,
+            'status' => $request->status,
+            'request_type' => $request->request_type,
+            'created_at' => $request->created_at,
+
+            'items' => $request->items->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+                    'quantity' => $item->quantity,
+                ];
+            }),
+        ];
+    });
+}
 
 
 //طلبات رئيس المستودع المستعجلة 
 
 public function getWarehousePendingUrgentRequests()
 {
-    return RequestOrder::with([
+    $requests = RequestOrder::with([
         'department',
         'requester',
         'items.product'
     ])
-   
     ->where('status', 'in_progress')
     ->where('request_type', 'urgent')
     ->latest()
     ->get();
+
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'department_name' => $request->department->name ?? null,
+            'requester_name' => $request->requester->name ?? null,
+            'status' => $request->status,
+            'request_type' => $request->request_type,
+            'created_at' => $request->created_at,
+
+            'items' => $request->items->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+                    'quantity' => $item->quantity,
+                ];
+            }),
+        ];
+    });
 }
 
 // تفاصيل طلب المستودع 
 
 public function getRequestOrderById($id)
 {
-    return RequestOrder::with([
+    /** @var \App\Models\RequestOrder $request */
+    $request = RequestOrder::with([
         'department',
         'requester',
-        'items.product'
+        'items'
     ])->findOrFail($id);
+
+    return [
+        'id' => $request->id,
+        'department_name' => $request->department->name ?? null,
+        'requester_name' => $request->requester->name ?? null,
+        'status' => $request->status,
+        'request_type' => $request->request_type,
+        'created_at' => $request->created_at,
+
+        'items' => $request->items->map(function ($item) {
+            return [
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                'unit' => $item->unit,
+                'received_quantity' => $item->received_quantity,
+            ];
+        }),
+    ];
 }
 
 // استلام القسم للمواد 
@@ -372,26 +430,44 @@ public function rejectDelivery(
 }
 
 // طلبات قيد التنفيذ 
-
 public function getInProgressRequests()
 {
-    return RequestOrder::with([
-            'department',
-            'user',
-            'items' => function ($query) {
-                $query->select(
-                    'id',
-                    'request_order_id',
-                    'product_id',
-                    'quantity',
-                    
-                    'approved_quantity'
-                );
-            }
-        ])
-        ->where('status', 'in_progress')
-        ->latest()
-        ->get();
+    $requests = RequestOrder::with([
+        'department',
+        'user',
+        'items' => function ($query) {
+            $query->select(
+                'id',
+                'request_order_id',
+                'product_id',
+                'quantity',
+                'approved_quantity'
+            );
+        }
+    ])
+    ->where('status', 'in_progress')
+    ->latest()
+    ->get();
+
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'department_name' => $request->department->name ?? null,
+            'user_name' => $request->user->name ?? null,
+            'status' => $request->status,
+            'request_type' => $request->request_type,
+            'created_at' => $request->created_at,
+
+            'items' => $request->items->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'approved_quantity' => $item->approved_quantity,
+                ];
+            }),
+        ];
+    });
 }
 
 

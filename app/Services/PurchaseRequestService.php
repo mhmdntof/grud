@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\PurchaseRequest;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\RequestOrder;
 
 class PurchaseRequestService
 {
@@ -130,42 +131,48 @@ public function rejectByCommittee($id, $rejectedBy, $reason = null)
 
 public function getPendingCommitteeUrgentRequests()
 {
-     return PurchaseRequest::with([
-            'items' => function ($query) {
-                $query->select(
-                    'id',
-                    'purchase_request_id',
-                    'product_id',
-                    'quantity',
-                    'unit',
-                    'received_quantity'
-                );
-            }
-        ])
-        ->select(
-            'id',
-            'requested_by',
-            'request_type',
-            'status',
-            'expected_budget',
-            'reason',
-            'created_at'
-        )
-        ->where('status', 'in_progress')
-        ->where('request_type', 'urgent')
-        ->latest()
-        ->get();
+    return PurchaseRequest::with([
+        'items.product' => function ($query) {
+            $query->select('id', 'brand');
+        },
+        'items' => function ($query) {
+            $query->select(
+                'id',
+                'purchase_request_id',
+                'product_id',
+                'quantity',
+                'unit',
+                'received_quantity'
+            );
+        }
+    ])
+    ->select(
+        'id',
+        'requested_by',
+        'request_type',
+        'status',
+        'expected_budget',
+        'reason',
+        'created_at'
+    )
+    ->where('status', 'in_progress')
+    ->where('request_type', 'urgent')
+    ->latest()
+    ->get();
 }
-
 
 //الطلبات العادية 
 
 
 public function getPendingCommitteeNormalRequests()
 {
-    return PurchaseRequest::with([
-            'items' => function ($query) {
-                $query->select(
+
+  return PurchaseRequest::with([
+        'items.product' => function ($query) {
+            $query->select('id', 'brand');
+        },
+        'items' => function ($query) {
+            $query->select(
                     'id',
                     'purchase_request_id',
                     'product_id',
@@ -196,8 +203,11 @@ public function getPendingCommitteeNormalRequests()
 public function getPendingManagerUrgentRequests()
 {
     return PurchaseRequest::with([
-            'items' => function ($query) {
-                $query->select(
+        'items.product' => function ($query) {
+            $query->select('id', 'brand');
+        },
+        'items' => function ($query) {
+            $query->select(
                     'id',
                     'purchase_request_id',
                     'product_id',
@@ -228,9 +238,12 @@ public function getPendingManagerUrgentRequests()
 
 public function getPendingManagerNormalRequests()
 {
-     return PurchaseRequest::with([
-            'items' => function ($query) {
-                $query->select(
+    return PurchaseRequest::with([
+        'items.product' => function ($query) {
+            $query->select('id', 'brand');
+        },
+        'items' => function ($query) {
+            $query->select(
                     'id',
                     'purchase_request_id',
                     'product_id',
@@ -260,22 +273,36 @@ public function getPendingManagerNormalRequests()
 //عرض تفاصيل طلب شراء
 
 
-public function getById($id)
+public function getRequestOrderById($id)
 {
-    return PurchaseRequest::with([
+    /** @var \App\Models\RequestOrder $request */
+    $request = RequestOrder::with([
+        'department',
         'requester',
-        'supplier',
-        'items' => function ($query) {
-            $query->select(
-                'id',
-                'purchase_request_id',
-                'product_id',
-                'quantity',
-                'unit',
-                'received_quantity'
-            );
-        }
+        'items'
     ])->findOrFail($id);
+
+    return [
+        'id' => $request->id,
+        'requested_by' => $request->requested_by,
+        'request_type' => $request->request_type,
+        'status' => $request->status,
+        'expected_budget' => $request->expected_budget,
+        'reason' => $request->reason,
+        'created_at' => $request->created_at,
+
+        'department_name' => $request->department->name ?? null,
+        'requester_name' => $request->requester->name ?? null,
+
+        'items' => $request->items->map(function ($item) {
+            return [
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                'unit' => $item->unit,
+                'received_quantity' => $item->received_quantity,
+            ];
+        }),
+    ];
 }
 
 
