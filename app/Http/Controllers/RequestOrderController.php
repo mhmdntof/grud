@@ -80,80 +80,80 @@ class RequestOrderController extends Controller
      * PATCH /api/request-orders/{id}/manager-approve
      */
     public function approveByManager($id, Request $request)
-{
-    $requestOrder = $this->requestOrderService->approveByManager(
-        $id,
-        $request->user()->id  // ← مرر الـ userId
-    );
+    {
+        $requestOrder = $this->requestOrderService->approveByManager(
+            $id,
+            $request->user()->id
+        );
 
-    return $this->sendResponse(
-        new RequestOrderResource($requestOrder),
-        'تمت الموافقة على الطلب بنجاح'
-    );
-}
+        return $this->sendResponse(
+            new RequestOrderResource($requestOrder),
+            'تمت الموافقة على الطلب بنجاح'
+        );
+    }
 
     /**
      * رفض مدير المستشفى
      * PATCH /api/request-orders/{id}/manager-reject
      */
     public function rejectByManager(
-    RejectRequestOrderRequest $request,
-    $id
-) {
-    $requestOrder = $this->requestOrderService->rejectByManager(
-        $id,
-        $request->validated()['rejection_reason'],
-        $request->user()->id  // ← مرر الـ userId
-    );
+        RejectRequestOrderRequest $request,
+        $id
+    ) {
+        $requestOrder = $this->requestOrderService->rejectByManager(
+            $id,
+            $request->validated()['rejection_reason'],
+            $request->user()->id
+        );
 
-    return $this->sendResponse(
-        new RequestOrderResource($requestOrder),
-        'تم رفض الطلب بنجاح'
-    );
-}
+        return $this->sendResponse(
+            new RequestOrderResource($requestOrder),
+            'تم رفض الطلب بنجاح'
+        );
+    }
 
     /**
      * موافقة المستودع
      * PATCH /api/request-orders/{id}/warehouse-approve
      */
     public function approveByWarehouse(
-    ApproveRequestOrderByWarehouseRequest $request,
-    int $id
-) {
-    $result = $this->requestOrderService->approveByWarehouse(
-        $id,
-        $request->validated()['items'],
-        $request->user()->id  // ← مرر الـ userId
-    );
+        ApproveRequestOrderByWarehouseRequest $request,
+        int $id
+    ) {
+        $result = $this->requestOrderService->approveByWarehouse(
+            $id,
+            $request->validated()['items'],
+            $request->user()->id
+        );
 
-    return $this->sendResponse(
-        new RequestOrderResource($result),
-        'تمت الموافقة على الطلب وتجهيزه للتسليم'
-    );
-}
+        return $this->sendResponse(
+            new RequestOrderResource($result),
+            'تمت الموافقة على الطلب وتجهيزه للتسليم'
+        );
+    }
 
     /**
      * رفض المستودع
      * PATCH /api/request-orders/{id}/warehouse-reject
      */
     public function rejectByWarehouse(
-    RejectRequestOrderRequest $request,
-    int $id
-) {
-    $result = $this->requestOrderService->rejectByWarehouse(
-        $id,
-        $request->validated()['rejection_reason'],
-        $request->user()->id  // ← مرر الـ userId
-    );
+        RejectRequestOrderRequest $request,
+        int $id
+    ) {
+        $result = $this->requestOrderService->rejectByWarehouse(
+            $id,
+            $request->validated()['rejection_reason'],
+            $request->user()->id
+        );
 
-    return $this->sendResponse(
-        new RequestOrderResource($result),
-        'تم رفض الطلب بنجاح'
-    );
-}
+        return $this->sendResponse(
+            new RequestOrderResource($result),
+            'تم رفض الطلب بنجاح'
+        );
+    }
 
     /**
-     * طلبات المدير العادية ()
+     * طلبات المدير العادية
      * GET /api/request-orders/manager/pending/normal
      */
     public function getPendingNormalRequests()
@@ -167,7 +167,7 @@ class RequestOrderController extends Controller
     }
 
     /**
-     * طلبات المدير المستعجلة ()
+     * طلبات المدير المستعجلة
      * GET /api/request-orders/manager/pending/urgent
      */
     public function getPendingUrgentRequests()
@@ -181,7 +181,7 @@ class RequestOrderController extends Controller
     }
 
     /**
-     * طلبات المستودع العادية ()
+     * طلبات المستودع العادية
      * GET /api/request-orders/warehouse/pending/normal
      */
     public function warehousePendingNormal()
@@ -195,7 +195,7 @@ class RequestOrderController extends Controller
     }
 
     /**
-     * طلبات المستودع المستعجلة ()
+     * طلبات المستودع المستعجلة
      * GET /api/request-orders/warehouse/pending/urgent
      */
     public function warehousePendingUrgent()
@@ -209,7 +209,7 @@ class RequestOrderController extends Controller
     }
 
     /**
-     * تفاصيل طلب ()
+     * تفاصيل طلب
      * GET /api/request-orders/{id}
      */
     public function show($id)
@@ -223,7 +223,7 @@ class RequestOrderController extends Controller
     }
 
     /**
-     * تأكيد الاستلام ()
+     * تأكيد الاستلام
      * PATCH /api/request-orders/{id}/confirm-delivery
      */
     public function confirmDelivery($id)
@@ -237,7 +237,7 @@ class RequestOrderController extends Controller
     }
 
     /**
-     * رفض الاستلام ()
+     * رفض الاستلام
      * PATCH /api/request-orders/{id}/reject-delivery
      */
     public function rejectDelivery(
@@ -271,7 +271,7 @@ class RequestOrderController extends Controller
 
     /**
      * جميع طلبات الأقسام
-     ** GET /api/request-orders/all
+     * GET /api/request-orders/all
      */
     public function getAllDepartmentRequests()
     {

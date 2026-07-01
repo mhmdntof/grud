@@ -130,16 +130,31 @@ public function rejectByCommittee($id, $rejectedBy, $reason = null)
 
 public function getPendingCommitteeUrgentRequests()
 {
-    return PurchaseRequest::with([
-        'requester',
-        'supplier',
-        'items.product'
-    ])
-    
-    ->where('status', 'in_progress')
-    ->where('request_type', 'urgent')
-    ->latest()
-    ->get();
+     return PurchaseRequest::with([
+            'items' => function ($query) {
+                $query->select(
+                    'id',
+                    'purchase_request_id',
+                    'product_id',
+                    'quantity',
+                    'unit',
+                    'received_quantity'
+                );
+            }
+        ])
+        ->select(
+            'id',
+            'requested_by',
+            'request_type',
+            'status',
+            'expected_budget',
+            'reason',
+            'created_at'
+        )
+        ->where('status', 'in_progress')
+        ->where('request_type', 'urgent')
+        ->latest()
+        ->get();
 }
 
 
@@ -149,15 +164,30 @@ public function getPendingCommitteeUrgentRequests()
 public function getPendingCommitteeNormalRequests()
 {
     return PurchaseRequest::with([
-        'requester',
-        'supplier',
-        'items.product'
-    ])
-   
-    ->where('status', 'in_progress')
-    ->where('request_type', 'normal')
-    ->latest()
-    ->get();
+            'items' => function ($query) {
+                $query->select(
+                    'id',
+                    'purchase_request_id',
+                    'product_id',
+                    'quantity',
+                    'unit',
+                    'received_quantity'
+                );
+            }
+        ])
+        ->select(
+            'id',
+            'requested_by',
+            'request_type',
+            'status',
+            'expected_budget',
+            'reason',
+            'created_at'
+        )
+        ->where('status', 'in_progress')
+        ->where('request_type', 'normal')
+        ->latest()
+        ->get();
 }
 
 
@@ -166,14 +196,30 @@ public function getPendingCommitteeNormalRequests()
 public function getPendingManagerUrgentRequests()
 {
     return PurchaseRequest::with([
-        'requester',
-        'supplier',
-        'items.product'
-    ])
-    ->where('status', 'pending')
-    ->where('request_type', 'urgent')
-    ->latest()
-    ->get();
+            'items' => function ($query) {
+                $query->select(
+                    'id',
+                    'purchase_request_id',
+                    'product_id',
+                    'quantity',
+                    'unit',
+                    'received_quantity'
+                );
+            }
+        ])
+        ->select(
+            'id',
+            'requested_by',
+            'request_type',
+            'status',
+            'expected_budget',
+            'reason',
+            'created_at'
+        )
+        ->where('status', 'pending')
+        ->where('request_type', 'urgent')
+        ->latest()
+        ->get();
 }
 
 
@@ -182,15 +228,31 @@ public function getPendingManagerUrgentRequests()
 
 public function getPendingManagerNormalRequests()
 {
-    return PurchaseRequest::with([
-        'requester',
-        'supplier',
-        'items.product'
-    ])
-    ->where('status', 'pending')
-    ->where('request_type', 'normal')
-    ->latest()
-    ->get();
+     return PurchaseRequest::with([
+            'items' => function ($query) {
+                $query->select(
+                    'id',
+                    'purchase_request_id',
+                    'product_id',
+                    'quantity',
+                    'unit',
+                    'received_quantity'
+                );
+            }
+        ])
+        ->select(
+            'id',
+            'requested_by',
+            'request_type',
+            'status',
+            'expected_budget',
+            'reason',
+            'created_at'
+        )
+        ->where('status', 'pending')
+        ->where('request_type', 'normal')
+        ->latest()
+        ->get();
 }
 
 
@@ -203,7 +265,16 @@ public function getById($id)
     return PurchaseRequest::with([
         'requester',
         'supplier',
-        'items.product'
+        'items' => function ($query) {
+            $query->select(
+                'id',
+                'purchase_request_id',
+                'product_id',
+                'quantity',
+                'unit',
+                'received_quantity'
+            );
+        }
     ])->findOrFail($id);
 }
 

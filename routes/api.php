@@ -201,7 +201,7 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
 
   Route::get(
         '/request-orders/{id}',
-        [RequestOrderController::class, 'show']
+        [RequestOrderController::class, 'getRequestOrderById']
     );
 
 
