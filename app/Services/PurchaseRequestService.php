@@ -273,7 +273,7 @@ public function getPendingManagerNormalRequests()
 //عرض تفاصيل طلب شراء
 
 
-public function getRequestOrderById($id)
+public function getById($id)
 {
     /** @var \App\Models\RequestOrder $request */
     $request = RequestOrder::with([
