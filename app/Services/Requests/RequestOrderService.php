@@ -196,7 +196,7 @@ public function getPendingUrgentRequests()
 
 public function getPendingNormalRequests()
 {
-    return RequestOrder::with([
+    $requests = RequestOrder::with([
         'department',
         'user',
         'items.product'
@@ -205,6 +205,27 @@ public function getPendingNormalRequests()
     ->where('request_type', 'normal')
     ->latest()
     ->get();
+
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'department_name' => $request->department->name ?? null,
+            'user_name' => $request->user->name ?? null,
+            'status' => $request->status,
+            'request_type' => $request->request_type,
+            'created_at' => $request->created_at,
+
+            'items' => $request->items->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+                    'quantity' => $item->quantity,
+                ];
+            })
+        ];
+    });
 }
 
 // طلبات رئيس المستودع العادية 
