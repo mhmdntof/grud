@@ -167,6 +167,15 @@ public function show($id)
     ]);
 }
 
+//جميع طلبات المدير للشراء 
+
+public function pendingManager()
+{
+    return response()->json(
+        $this->purchaseRequestService
+            ->getPendingManagerRequests()
+    );
+}
 
 
 }

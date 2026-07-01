@@ -340,7 +340,9 @@ Route::get('/get/requests/purchase/normal',[WarehouseController::class,'getNorma
 Route::get('/get/requests/purchase/urgent',[WarehouseController::class,'getUrgentWarehouseRequests']);
 
 
+//جميع طلبات الشراء للمدير 
 
+Route::get('/get/requests/purchase',[WarehouseController::class,'pendingManager']);
 
 
 

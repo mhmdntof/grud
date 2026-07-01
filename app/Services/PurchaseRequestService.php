@@ -306,4 +306,41 @@ public function getById($id)
 }
 
 
+//جميع طلبات الشراء للمدير 
+
+
+public function getPendingManagerRequests()
+{
+    return PurchaseRequest::with([
+        'items.product' => function ($query) {
+            $query->select('id', 'brand');
+        },
+        'items' => function ($query) {
+            $query->select(
+                    'id',
+                    'purchase_request_id',
+                    'product_id',
+                    'quantity',
+                    'unit',
+                    'received_quantity'
+                );
+            }
+        ])
+        ->select(
+            'id',
+            'requested_by',
+            'request_type',
+            'status',
+            'expected_budget',
+            'reason',
+            'created_at'
+        )
+        ->where('status', 'pending')
+        ->latest()
+        ->get();
+}
+
+
+
+
 }
