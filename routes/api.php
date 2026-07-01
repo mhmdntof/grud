@@ -342,7 +342,7 @@ Route::get('/get/requests/purchase/urgent',[WarehouseController::class,'getUrgen
 
 //جميع طلبات الشراء للمدير 
 
-Route::get('/get/requests/purchase',[PurchaseRequestController::class,'pendingManager']);
+Route::get('/get/requests/purchase',[PurchaseRequestController::class,'getPendingManager']);
 
 
 
