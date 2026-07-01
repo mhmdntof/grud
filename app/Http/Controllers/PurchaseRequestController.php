@@ -169,7 +169,7 @@ public function show($id)
 
 //جميع طلبات المدير للشراء 
 
-public function pendingManager()
+public function getPendingManager()
 {
     return response()->json(
         $this->purchaseRequestService
