@@ -7,14 +7,26 @@ use Illuminate\Database\Eloquent\Model;
 class RequestOrder extends Model
 {
     protected $fillable = [
-        'department_id',
-        'requested_by',
-        'manager_status',
-        'request_type',
-        'warehouse_status',
-        'rejection_reason',
-        'request_type',
-        'status'
+    'department_id',
+    'requested_by',
+    'manager_status',
+    'request_type',
+    'warehouse_status',
+    'rejection_reason',
+    'status',
+    'manager_approved_by',
+    'manager_approved_at',
+    'manager_rejection_reason',
+    'warehouse_approved_by',
+    'warehouse_approved_at',
+    'warehouse_rejection_reason',
+];
+
+protected $casts = [
+        'manager_approved_at' => 'datetime',
+        'warehouse_approved_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function items()
@@ -36,5 +48,13 @@ public function user()
 {
     return $this->belongsTo(User::class, 'requested_by');
 }
+public function managerApprover()
+{
+    return $this->belongsTo(User::class, 'manager_approved_by');
+}
 
+public function warehouseApprover()
+{
+    return $this->belongsTo(User::class, 'warehouse_approved_by');
+}
     }

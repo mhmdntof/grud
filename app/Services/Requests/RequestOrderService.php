@@ -19,6 +19,7 @@ class RequestOrderService
     'department_id' => $user->department_id,
     'requested_by' => $user->id,
     'request_type' => $data['request_type'],
+    'status' => 'pending',
 ]);
         $requestOrder->items()->createMany($data['items']);
 
@@ -30,9 +31,9 @@ class RequestOrderService
     });
 }
 
-//موافقة مدير المشفى على طلب القسم 
+//موافقة مدير المشفى على طلب القسم
 
-public function approveByManager($id)
+public function approveByManager($id, int $userId)
 {
     $requestOrder = RequestOrder::findOrFail($id);
 
@@ -42,14 +43,19 @@ public function approveByManager($id)
 
     $requestOrder->update([
         'status' => 'in_progress',
+        'manager_status' => 'approved',
+        'manager_approved_by' => $userId,
+        'manager_approved_at' => now(),
         'rejection_reason' => null,
     ]);
+
+    $requestOrder->load(['items.product', 'department', 'requester', 'managerApprover']);
 
     return $requestOrder;
 }
 
-//رفض المدير لطلب القسم 
-public function rejectByManager($id, string $reason)
+//رفض المدير لطلب القسم
+public function rejectByManager($id, string $reason, int $userId)
 {
     $requestOrder = RequestOrder::findOrFail($id);
 
@@ -59,8 +65,14 @@ public function rejectByManager($id, string $reason)
 
     $requestOrder->update([
         'status' => 'rejected',
+        'manager_status' => 'rejected',
+        'manager_approved_by' => $userId,
+        'manager_approved_at' => now(),
+        'manager_rejection_reason' => $reason,
         'rejection_reason' => $reason,
     ]);
+
+    $requestOrder->load(['items.product', 'department', 'requester', 'managerApprover']);
 
     return $requestOrder;
 }
@@ -69,95 +81,77 @@ public function rejectByManager($id, string $reason)
 
 
 
-//موافقة المستودع على طلب القسم 
+//موافقة المستودع على طلب القسم
 
-public function approveByWarehouse(
-    int $requestOrderId,
-    array $items
-) {
+public function approveByWarehouse(int $requestOrderId, array $items, int $userId)
+{
     $requestOrder = RequestOrder::with('items.product')
         ->findOrFail($requestOrderId);
 
     if ($requestOrder->status !== 'in_progress') {
-        throw new \Exception(
-            'Only requests in progress can be approved.'
-        );
+        throw new \Exception('Only requests in progress can be approved.');
     }
 
-    DB::transaction(function () use ($requestOrder, $items) {
-
+    DB::transaction(function () use ($requestOrder, $items, $userId) {
         foreach ($items as $itemData) {
-
-            $item = RequestOrderItem::where(
-                'request_order_id',
-                $requestOrder->id
-            )->findOrFail($itemData['item_id']);
+            $item = RequestOrderItem::where('request_order_id', $requestOrder->id)
+                ->findOrFail($itemData['item_id']);
 
             $approvedQuantity = $itemData['approved_quantity'];
 
             if ($approvedQuantity > $item->quantity) {
-                throw new \Exception(
-                    'Approved quantity cannot exceed requested quantity.'
-                );
+                throw new \Exception('Approved quantity cannot exceed requested quantity.');
             }
 
-            $product = Product::findOrFail($item->product_id);
+            $product = Product::lockForUpdate()->findOrFail($item->product_id);
 
             if ($approvedQuantity > $product->total_quantity) {
-                throw new \Exception(
-                    "Available quantity for {$product->name} is {$product->total_quantity} only."
-                );
+                throw new \Exception("Available quantity for {$product->name} is {$product->total_quantity} only.");
             }
 
-            $item->update([
-                'approved_quantity' => $approvedQuantity
-            ]);
-
-            // حجز الكمية مباشرة من المستودع
-            $product->decrement(
-                'total_quantity',
-                $approvedQuantity
-            );
+            $item->update(['approved_quantity' => $approvedQuantity]);
+            $product->decrement('total_quantity', $approvedQuantity);
         }
 
         $requestOrder->update([
-            'status' => 'ready_for_delivery'
+            'status' => 'ready_for_delivery',
+            'warehouse_status' => 'approved',
+            'warehouse_approved_by' => $userId,
+            'warehouse_approved_at' => now(),
         ]);
     });
 
-    return $requestOrder->fresh([
-        'items.product'
-    ]);
-}
-
-
-// رفض المستودع لطلب القسم 
-
-
-public function rejectByWarehouse(
-    int $requestOrderId,
-    string $reason
-)
-{
-    $requestOrder = RequestOrder::findOrFail(
-        $requestOrderId
-    );
-
-    if ($requestOrder->status !== 'in_progress') {
-        throw new \Exception(
-            'Only requests in progress can be rejected.'
-        );
-    }
-
-    $requestOrder->update([
-        'status' => 'rejected',
-        'rejection_reason' => $reason,
-    ]);
+    $requestOrder->load(['items.product', 'department', 'requester', 'warehouseApprover']);
 
     return $requestOrder;
 }
 
-//طلبات الادمن المستعجلة 
+// رفض المستودع لطلب القسم
+
+
+public function rejectByWarehouse(int $requestOrderId, string $reason, int $userId)
+{
+    $requestOrder = RequestOrder::findOrFail($requestOrderId);
+
+    if ($requestOrder->status !== 'in_progress') {
+        throw new \Exception('Only requests in progress can be rejected.');
+    }
+
+    $requestOrder->update([
+        'status' => 'rejected',
+        'warehouse_status' => 'rejected',
+        'warehouse_approved_by' => $userId,
+        'warehouse_approved_at' => now(),
+        'warehouse_rejection_reason' => $reason,
+        'rejection_reason' => $reason,
+    ]);
+
+    $requestOrder->load(['items.product', 'department', 'requester', 'warehouseApprover']);
+
+    return $requestOrder;
+}
+
+//طلبات الادمن المستعجلة
 public function getPendingUrgentRequests()
 {
     return RequestOrder::with([
@@ -186,7 +180,7 @@ public function getPendingNormalRequests()
     ->get();
 }
 
-// طلبات رئيس المستودع العادية 
+// طلبات رئيس المستودع العادية
 
 public function getWarehousePendingNormalRequests()
 {
@@ -195,7 +189,7 @@ public function getWarehousePendingNormalRequests()
         'requester',
         'items.product'
     ])
-   
+
     ->where('status', 'in_progress')
     ->where('request_type', 'normal')
     ->latest()
@@ -204,7 +198,7 @@ public function getWarehousePendingNormalRequests()
 
 
 
-//طلبات رئيس المستودع المستعجلة 
+//طلبات رئيس المستودع المستعجلة
 
 public function getWarehousePendingUrgentRequests()
 {
@@ -213,14 +207,14 @@ public function getWarehousePendingUrgentRequests()
         'requester',
         'items.product'
     ])
-   
+
     ->where('status', 'in_progress')
     ->where('request_type', 'urgent')
     ->latest()
     ->get();
 }
 
-// تفاصيل طلب المستودع 
+// تفاصيل طلب المستودع
 
 public function getRequestOrderById($id)
 {
@@ -231,7 +225,7 @@ public function getRequestOrderById($id)
     ])->findOrFail($id);
 }
 
-// استلام القسم للمواد 
+// استلام القسم للمواد
 
 
 public function confirmDelivery(int $requestOrderId)
@@ -281,7 +275,7 @@ public function confirmDelivery(int $requestOrderId)
 
 
 
-//رفض القسم للمواد 
+//رفض القسم للمواد
 
 
 public function rejectDelivery(
@@ -329,7 +323,7 @@ public function rejectDelivery(
     ]);
 }
 
-// طلبات قيد التنفيذ 
+// طلبات قيد التنفيذ
 
 public function getInProgressRequests()
 {
@@ -344,7 +338,7 @@ public function getInProgressRequests()
 }
 
 
-//جلب جميع طلبات الاقسام 
+//جلب جميع طلبات الاقسام
 
 
 public function getAllDepartmentRequests()
@@ -374,4 +368,61 @@ public function getAllDepartmentRequests()
     });
 }
 
+// جلب طلبات رئيس قسم معين
+
+public function getMyRequests(int $userId, array $filters = []): array
+{
+    $query = RequestOrder::where('requested_by', $userId)
+        ->with(['items.product', 'department', 'requester']);
+
+    // فلترة حسب الحالة
+    if (!empty($filters['status'])) {
+        $query->where('status', $filters['status']);
+    }
+
+    // فلترة حسب النوع
+    if (!empty($filters['type'])) {
+        $query->where('request_type', $filters['type']);
+    }
+
+    $query->orderBy('created_at', 'desc');
+
+    $perPage = $filters['per_page'] ?? 15;
+    $requests = $query->paginate($perPage);
+
+    return [
+        'requests' => \App\Http\Resources\RequestOrderResource::collection($requests),
+        'pagination' => [
+            'current_page' => $requests->currentPage(),
+            'last_page' => $requests->lastPage(),
+            'per_page' => $requests->perPage(),
+            'total' => $requests->total(),
+        ],
+    ];
+}
+
+/**
+ * إلغاء طلب
+ */
+public function cancelRequest(int $requestId, int $userId): array
+{
+    $request = RequestOrder::where('id', $requestId)
+        ->where('requested_by', $userId)
+        ->first();
+
+    if (!$request) {
+        throw new \Exception('الطلب غير موجود أو لا تملك صلاحية الوصول إليه');
+    }
+
+    if (!in_array($request->status, ['pending'])) {
+        throw new \Exception('لا يمكن إلغاء طلب تمت معالجته');
+    }
+
+    $request->update(['status' => 'cancelled']);
+
+    // إعادة تحميل Relations بعد التحديث
+    $request->load(['items.product', 'department', 'requester']);
+
+    return $request;
+}
 }

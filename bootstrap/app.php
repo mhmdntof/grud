@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
    ->withMiddleware(function ($middleware) {
     $middleware->alias([
         'role' => \App\Http\Middleware\RoleMiddleware::class,
+        'is.pharmacy' => \App\Http\Middleware\IsPharmacyDepartment::class,
     ]);
 
     $middleware->statefulApi();
@@ -31,5 +32,5 @@ $middleware->validateCsrfTokens(except: [
             return $request->is('api/*') || $request->expectsJson();
         });
 
-    
+
     })->create();
