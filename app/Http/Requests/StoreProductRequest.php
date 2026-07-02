@@ -27,7 +27,8 @@ class StoreProductRequest extends FormRequest
             
             'description' => 'nullable|string',
             'maximum_stock' => 'required',
-            'brand' => 'nullable'
+            'brand' => 'nullable',
+            'storage_location'=>'nullable'
         ];
     }
 }
