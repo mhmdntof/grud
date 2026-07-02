@@ -167,7 +167,7 @@ public function getPendingUrgentRequests()
     $requests = RequestOrder::with([
         'department',
         'user',
-        'items.product'
+        'items.product.suppliers'
     ])
     ->where('status', 'pending')
     ->where('request_type', 'urgent')
@@ -182,6 +182,7 @@ public function getPendingUrgentRequests()
             'user_name' => $request->user->name ?? null,
             'status' => $request->status,
             'request_type' => $request->request_type,
+            'request_frequency' => $request->request_frequency,
             'created_at' => $request->created_at,
 
             'items' => $request->items->map(function ($item) {
@@ -189,6 +190,15 @@ public function getPendingUrgentRequests()
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name ?? null,
                     'brand' => $item->product->brand ?? null,
+
+                    // ✔ الموردين من product_supplier
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
                     'quantity' => $item->quantity,
                 ];
             })
@@ -248,7 +258,7 @@ public function getWarehousePendingNormalRequests()
     $requests = RequestOrder::with([
         'department',
         'requester',
-        'items.product'
+        'items.product.suppliers'
     ])
     ->where('status', 'in_progress')
     ->where('request_type', 'normal')
@@ -263,6 +273,7 @@ public function getWarehousePendingNormalRequests()
             'requester_name' => $request->requester->name ?? null,
             'status' => $request->status,
             'request_type' => $request->request_type,
+            'request_frequency' => $request->request_frequency, // ✔️ إضافة جديدة
             'created_at' => $request->created_at,
 
             'items' => $request->items->map(function ($item) {
@@ -270,6 +281,15 @@ public function getWarehousePendingNormalRequests()
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name ?? null,
                     'brand' => $item->product->brand ?? null,
+
+                    // ✔️ الموردين من product_supplier
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
                     'quantity' => $item->quantity,
                 ];
             }),
@@ -285,7 +305,7 @@ public function getWarehousePendingUrgentRequests()
     $requests = RequestOrder::with([
         'department',
         'requester',
-        'items.product'
+        'items.product.suppliers'
     ])
     ->where('status', 'in_progress')
     ->where('request_type', 'urgent')
@@ -300,6 +320,7 @@ public function getWarehousePendingUrgentRequests()
             'requester_name' => $request->requester->name ?? null,
             'status' => $request->status,
             'request_type' => $request->request_type,
+            'request_frequency' => $request->request_frequency, // ✔️ إضافة جديدة
             'created_at' => $request->created_at,
 
             'items' => $request->items->map(function ($item) {
@@ -307,6 +328,15 @@ public function getWarehousePendingUrgentRequests()
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name ?? null,
                     'brand' => $item->product->brand ?? null,
+
+                    // ✔️ الموردين من product_supplier
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
                     'quantity' => $item->quantity,
                 ];
             }),
@@ -322,7 +352,7 @@ public function getRequestOrderById($id)
     $request = RequestOrder::with([
         'department',
         'requester',
-        'items.product'
+        'items.product.suppliers'
     ])->findOrFail($id);
 
     return [
@@ -331,17 +361,26 @@ public function getRequestOrderById($id)
         'requester_name' => $request->requester->name ?? null,
         'status' => $request->status,
         'request_type' => $request->request_type,
+        'request_frequency' => $request->request_frequency, // ✔️ إضافة جديدة
         'created_at' => $request->created_at,
 
         'items' => $request->items->map(function ($item) {
             return [
                 'product_id' => $item->product_id,
+                'product_name' => $item->product->name ?? null,
+                'brand' => $item->product->brand ?? null,
+
+                // ✔️ suppliers من product_supplier
+                'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                    return [
+                        'id' => $supplier->id,
+                        'name' => $supplier->name,
+                    ];
+                }),
+
                 'quantity' => $item->quantity,
                 'unit' => $item->unit,
                 'received_quantity' => $item->received_quantity,
-
-                // ✔️ إضافة البراند
-                'brand' => $item->product->brand ?? null,
             ];
         }),
     ];
