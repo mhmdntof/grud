@@ -28,6 +28,8 @@ return new class extends Migration
 
     $table->integer('maximum_stock')->default(0);
 
+    $table->string('storage_location')->nullable();
+
     $table->string('unit')->nullable();
 
     $table->text('description')->nullable();
