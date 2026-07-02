@@ -214,20 +214,18 @@ public function getPendingNormalRequests()
 
         return [
             'id' => $request->id,
-            'requested_by' => $request->requested_by,
+            'department_name' => $request->department->name ?? null,
+            'user_name' => $request->user->name ?? null,
+            'status' => $request->status,
             'request_type' => $request->request_type,
             'request_frequency' => $request->request_frequency,
-            'status' => $request->status,
             'created_at' => $request->created_at,
 
-            'department' => $request->department,
-            'user' => $request->user,
-
             'items' => $request->items->map(function ($item) {
-
                 return [
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
 
                     // ✔ الموردين من product_supplier
                     'suppliers' => $item->product->suppliers->map(function ($supplier) {
@@ -238,14 +236,11 @@ public function getPendingNormalRequests()
                     }),
 
                     'quantity' => $item->quantity,
-                    'unit' => $item->unit,
-                    'received_quantity' => $item->received_quantity,
                 ];
-            }),
+            })
         ];
     });
 }
-
 // طلبات رئيس المستودع العادية 
 
 public function getWarehousePendingNormalRequests()
