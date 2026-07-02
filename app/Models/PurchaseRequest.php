@@ -19,6 +19,7 @@ class PurchaseRequest extends Model
         'manager_status',
         'committee_status',
         'rejection_reason',
+        'request_frequency'
     ];
 
     /*

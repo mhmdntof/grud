@@ -11,15 +11,19 @@ use Illuminate\Support\Facades\DB;
 
 class RequestOrderService
 {
-    public function create(array $data, User $user)
+   public function create(array $data, User $user)
 {
     return DB::transaction(function () use ($data, $user) {
 
-       $requestOrder = RequestOrder::create([
-    'department_id' => $user->department_id,
-    'requested_by' => $user->id,
-    'request_type' => $data['request_type'],
-]);
+        $requestOrder = RequestOrder::create([
+            'department_id' => $user->department_id,
+            'requested_by' => $user->id,
+            'request_type' => $data['request_type'],
+
+            // ✔️ العامود الجديد
+            'request_frequency' => $data['request_frequency'] ?? 'normal',
+        ]);
+
         $requestOrder->items()->createMany($data['items']);
 
         return $requestOrder->load([

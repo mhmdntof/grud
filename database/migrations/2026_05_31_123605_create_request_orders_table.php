@@ -33,6 +33,8 @@ return new class extends Migration
     $table->text('rejection_reason')
         ->nullable();
 
+        $table->string('request_frequency')->default('normal')->nullable();
+
     $table->timestamps();
 });
 }

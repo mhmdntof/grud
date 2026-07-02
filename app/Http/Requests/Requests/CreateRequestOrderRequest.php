@@ -21,6 +21,8 @@ class CreateRequestOrderRequest extends FormRequest
             'items.*.product_id' => 'required|exists:products,id',
 
             'items.*.quantity' => 'required|integer|min:1',
+
+            'request_frequency'=>'nullable'
         ];
     }
 }
