@@ -490,6 +490,7 @@ public function getInProgressRequests()
     $requests = RequestOrder::with([
         'department',
         'user',
+        'items.product.suppliers',
         'items' => function ($query) {
             $query->select(
                 'id',
@@ -512,11 +513,23 @@ public function getInProgressRequests()
             'user_name' => $request->user->name ?? null,
             'status' => $request->status,
             'request_type' => $request->request_type,
+            'request_frequency' => $request->request_frequency, // ✔️ جديد
             'created_at' => $request->created_at,
 
             'items' => $request->items->map(function ($item) {
                 return [
                     'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+
+                    // ✔️ الموردين من product_supplier
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
                     'quantity' => $item->quantity,
                     'approved_quantity' => $item->approved_quantity,
                 ];
@@ -524,7 +537,6 @@ public function getInProgressRequests()
         ];
     });
 }
-
 
 //جلب جميع طلبات الاقسام 
 
