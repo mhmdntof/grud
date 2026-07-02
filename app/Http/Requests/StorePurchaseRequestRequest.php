@@ -34,6 +34,9 @@ class StorePurchaseRequestRequest extends FormRequest
 
         'items' => 'required|array|min:1|max:5',
 
+
+        'request_frequency'=>'nullable',
+
         'items.*.product_id' => [
             'required',
             'exists:products,id'

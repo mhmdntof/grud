@@ -20,6 +20,7 @@ class PurchaseRequestService
             'expected_budget' => $data['expected_budget'],
             'reason' => $data['reason'],
             'status' => 'pending',
+            'request_frequency'=>$data['request_frequency'],
         ]);
 
         foreach ($data['items'] as $item) {
