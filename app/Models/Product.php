@@ -19,7 +19,8 @@ protected $fillable = [
     'unit',
     'description',
     'brand',
-    'maximum_stock'
+    'maximum_stock',
+    'storage_location'
 ];
 
     protected $casts = [

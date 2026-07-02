@@ -34,6 +34,8 @@ class ProductService
 
         'description' => $data['description'] ?? null,
 
+        'storage_location'=>$data['storage_location']?? null,
+
         // تبدأ الكمية من الصفر
         'total_quantity' => 0,
     ]);
