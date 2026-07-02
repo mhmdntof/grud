@@ -203,7 +203,7 @@ public function getPendingNormalRequests()
     $requests = RequestOrder::with([
         'department',
         'user',
-        'items.product'
+        'items.product.suppliers'
     ])
     ->where('status', 'pending')
     ->where('request_type', 'normal')
@@ -214,20 +214,34 @@ public function getPendingNormalRequests()
 
         return [
             'id' => $request->id,
-            'department_name' => $request->department->name ?? null,
-            'user_name' => $request->user->name ?? null,
-            'status' => $request->status,
+            'requested_by' => $request->requested_by,
             'request_type' => $request->request_type,
+            'request_frequency' => $request->request_frequency,
+            'status' => $request->status,
             'created_at' => $request->created_at,
 
+            'department' => $request->department,
+            'user' => $request->user,
+
             'items' => $request->items->map(function ($item) {
+
                 return [
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name ?? null,
-                    'brand' => $item->product->brand ?? null,
+
+                    // ✔ الموردين من product_supplier
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
                     'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'received_quantity' => $item->received_quantity,
                 ];
-            })
+            }),
         ];
     });
 }
