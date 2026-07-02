@@ -545,27 +545,38 @@ public function getAllDepartmentRequests()
 {
     return RequestOrder::with([
         'department:id,name',
-        'items:id,request_order_id,product_id,quantity',
+        'items.product.suppliers',
         'items.product:id,name,type'
     ])
     ->orderBy('created_at', 'desc')
     ->get()
     ->map(function ($request) {
+
         return [
             'id' => $request->id,
-            'department_name' => $request->department->name,
+            'department_name' => $request->department->name ?? null,
             'status' => $request->status,
             'request_type' => $request->request_type,
+            'request_frequency' => $request->request_frequency,
             'created_at' => $request->created_at,
+
             'items' => $request->items->map(function ($item) {
+
                 return [
                     'product_id' => $item->product_id,
-                    'product_name' => $item->product->name,
+                    'product_name' => $item->product->name ?? null,
                     'quantity' => $item->quantity,
-                ];
-            }),
-        ];
-    });
-}
 
+                    // ✔️ suppliers بدون pivot
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    })->values(),
+                ];
+            })->values(),
+        ];
+    })->values();
+}
 }

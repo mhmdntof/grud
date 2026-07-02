@@ -207,7 +207,7 @@ public function getPendingCommitteeNormalRequests()
 
 public function getPendingManagerUrgentRequests()
 {
-    return PurchaseRequest::with([
+    $requests = PurchaseRequest::with([
         'items.product.suppliers',
         'items.product' => function ($query) {
             $query->select('id', 'brand');
@@ -231,21 +231,55 @@ public function getPendingManagerUrgentRequests()
         'expected_budget',
         'reason',
         'created_at',
-        'request_frequency' // ✔️ التعديل الجديد
+        'request_frequency'
     )
     ->where('status', 'pending')
     ->where('request_type', 'urgent')
     ->latest()
     ->get();
-}
 
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'requested_by' => $request->requested_by,
+            'request_type' => $request->request_type,
+            'status' => $request->status,
+            'expected_budget' => $request->expected_budget,
+            'reason' => $request->reason,
+            'created_at' => $request->created_at,
+            'request_frequency' => $request->request_frequency,
+
+            'items' => $request->items->map(function ($item) {
+
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+
+                    // ✔️ نخليها نظيفة بدون pivot
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'received_quantity' => $item->received_quantity,
+                ];
+            }),
+        ];
+    });
+}
 
 //الطلبات العادية 
 
 
 public function getPendingManagerNormalRequests()
 {
-    return PurchaseRequest::with([
+   $requests = PurchaseRequest::with([
         'items.product.suppliers',
         'items.product' => function ($query) {
             $query->select('id', 'brand');
@@ -269,12 +303,47 @@ public function getPendingManagerNormalRequests()
         'expected_budget',
         'reason',
         'created_at',
-        'request_frequency' // ✔️ التعديل الجديد
+        'request_frequency'
     )
     ->where('status', 'pending')
     ->where('request_type', 'normal')
     ->latest()
     ->get();
+
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'requested_by' => $request->requested_by,
+            'request_type' => $request->request_type,
+            'status' => $request->status,
+            'expected_budget' => $request->expected_budget,
+            'reason' => $request->reason,
+            'created_at' => $request->created_at,
+            'request_frequency' => $request->request_frequency,
+
+            'items' => $request->items->map(function ($item) {
+
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+
+                    // ✔️ نخليها نظيفة بدون pivot
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'received_quantity' => $item->received_quantity,
+                ];
+            }),
+        ];
+    });
 }
 
 
@@ -289,6 +358,16 @@ public function getById($id)
         'department',
         'requester',
         'items.product.suppliers',
+        'items' => function ($query) {
+            $query->select(
+                'id',
+                'request_order_id',
+                'product_id',
+                'quantity',
+                'unit',
+                'received_quantity'
+            );
+        }
     ])->findOrFail($id);
 
     return [
@@ -305,12 +384,13 @@ public function getById($id)
         'requester_name' => $request->requester->name ?? null,
 
         'items' => $request->items->map(function ($item) {
+
             return [
                 'product_id' => $item->product_id,
                 'product_name' => $item->product->name ?? null,
                 'brand' => $item->product->brand ?? null,
 
-                // ✔ suppliers من product_supplier
+                // ✔️ تنظيف الموردين (بدون pivot)
                 'suppliers' => $item->product->suppliers->map(function ($supplier) {
                     return [
                         'id' => $supplier->id,
@@ -325,7 +405,6 @@ public function getById($id)
         }),
     ];
 }
-
 
 //جميع طلبات الشراء للمدير 
 
@@ -356,13 +435,46 @@ public function getPendingManagerRequests()
         'expected_budget',
         'reason',
         'created_at',
-        'request_frequency' // ✔️ إضافة جديدة
+        'request_frequency'
     )
     ->where('status', 'pending')
     ->latest()
-    ->get();
-}
+    ->get()
+    ->map(function ($request) {
 
+        return [
+            'id' => $request->id,
+            'requested_by' => $request->requested_by,
+            'request_type' => $request->request_type,
+            'status' => $request->status,
+            'expected_budget' => $request->expected_budget,
+            'reason' => $request->reason,
+            'created_at' => $request->created_at,
+            'request_frequency' => $request->request_frequency,
+
+            'items' => $request->items->map(function ($item) {
+
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+
+                    // ✔️ تنظيف الموردين (بدون pivot)
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'received_quantity' => $item->received_quantity,
+                ];
+            }),
+        ];
+    });
+}
 
 
 }
