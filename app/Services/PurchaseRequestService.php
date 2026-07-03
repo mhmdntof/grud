@@ -363,8 +363,7 @@ public function getById($id)
                 'id',
                 'request_order_id',
                 'product_id',
-                'quantity',
-                'received_quantity'
+                'quantity'
             );
         }
     ])->findOrFail($id);
@@ -389,7 +388,8 @@ public function getById($id)
                 'product_name' => $item->product->name ?? null,
                 'brand' => $item->product->brand ?? null,
 
-                // ✔ suppliers نظاف بدون pivot
+                'unit' => $item->product->unit ?? null,
+
                 'suppliers' => $item->product->suppliers->map(function ($supplier) {
                     return [
                         'id' => $supplier->id,
@@ -397,11 +397,7 @@ public function getById($id)
                     ];
                 })->values(),
 
-                // ✔ unit من product (مو من items)
-                'unit' => $item->product->unit ?? null,
-
                 'quantity' => $item->quantity,
-                'received_quantity' => $item->received_quantity,
             ];
         })->values(),
     ];
