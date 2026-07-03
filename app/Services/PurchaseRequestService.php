@@ -399,7 +399,7 @@ public function getById($id)
                 }),
 
                 'quantity' => $item->quantity,
-                'unit' => $item->unit,
+              
                 'received_quantity' => $item->received_quantity,
             ];
         }),
