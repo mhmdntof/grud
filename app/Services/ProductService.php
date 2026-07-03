@@ -123,33 +123,37 @@ public function getDepartmentProducts(
     string $type
 )
 {
-    $department = Department::where(
-        'name',
-        $departmentName
-    )->firstOrFail();
+    $department = Department::where('name', $departmentName)->firstOrFail();
 
-    return DepartmentProduct::query()
-        ->join(
-            'products',
-            'department_products.product_id',
-            '=',
-            'products.id'
-        )
-        ->where(
-            'department_products.department_id',
-            $department->id
-        )
-        ->where(
-            'products.type',
-            $type
-        )
-        ->select(
-            'products.id as product_id',
-            'products.name as product_name',
-            'department_products.quantity'
-        )
-        ->orderBy('products.name')
+    $products = DepartmentProduct::with([
+            'product.suppliers'
+        ])
+        ->where('department_id', $department->id)
+        ->whereHas('product', function ($query) use ($type) {
+            $query->where('type', $type);
+        })
         ->get();
+
+    return [
+        'department_name' => $department->name,
+        'products' => $products->map(function ($item) {
+
+            return [
+                'product_id' => $item->product_id,
+                'product_name' => $item->product->name ?? null,
+                'brand' => $item->product->brand ?? null,
+                'quantity' => $item->quantity,
+
+                // ✔ suppliers بشكل نظيف
+                'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                    return [
+                        'id' => $supplier->id,
+                        'name' => $supplier->name,
+                    ];
+                })->values(),
+            ];
+        })->values(),
+    ];
 }
 
 //كل مواد المستودع 
