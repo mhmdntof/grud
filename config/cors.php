@@ -6,6 +6,7 @@ return [
     'api/*',
     'login',
     'logout',
+    'me',
     'sanctum/csrf-cookie',
 ],
     'allowed_methods' => ['*'],
