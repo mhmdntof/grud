@@ -45,28 +45,5 @@ class OtpController extends Controller
         ]);
     }
 
-    // 2️⃣ التحقق من OTP
-    public function verify(Request $request)
-    {
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
-        }
-
-        $otp = $this->otpService->verify($user->id, $request->otp);
-
-        if (!$otp) {
-            return response()->json(['error' => 'Invalid OTP'], 400);
-        }
-
-        $this->otpService->markUsed($otp);
-
-        // تسجيل دخول بعد التحقق
-       Auth::login($user);
-
-        return response()->json([
-            'message' => 'OTP verified & logged in'
-        ]);
-    }
+   
 }
