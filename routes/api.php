@@ -261,7 +261,8 @@ Route::get('/get/requests/purchase/urgent',[WarehouseController::class,'getUrgen
 //جميع طلبات الشراء للمدير
 Route::get('/get/requests/purchase',[PurchaseRequestController::class,'getPendingManager']);
 
-
+//حذف منتج 
+Route::delete('/delete/products/{id}', [ProductController::class, 'deleteProduct']);
 
 Route::middleware(['auth:sanctum', 'role:department_head'])
     ->prefix('department-head')

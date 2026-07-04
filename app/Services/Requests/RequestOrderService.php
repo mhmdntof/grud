@@ -567,6 +567,7 @@ public function getAllDepartmentRequests()
                     'product_name' => $item->product->name ?? null,
                     'quantity' => $item->quantity,
                      'brand' => $item->product->brand ?? null,
+                     'unit'=>$item->product->unit ?? null,
 
                     // ✔️ suppliers بدون pivot
                     'suppliers' => $item->product->suppliers->map(function ($supplier) {

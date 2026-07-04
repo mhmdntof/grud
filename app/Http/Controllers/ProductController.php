@@ -128,6 +128,17 @@ public function getAllSuppliersWithProducts()
     ]);
 }
 
+
+
+//حذف منتج 
+
+ public function deleteProduct($id)
+    {
+        $result = $this->productService->deleteProduct($id);
+
+        return response()->json($result);
+    }
+
         }
 
 
