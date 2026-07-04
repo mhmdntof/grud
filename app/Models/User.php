@@ -59,6 +59,11 @@ use  HasRoles;
     return $this->belongsTo(Role::class);
 }
 
+    public function department()
+{
+    return $this->belongsTo(Department::class);
+}
+
 public function otps()
 {
     return $this->hasMany(UserOtp::class);

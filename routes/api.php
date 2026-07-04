@@ -8,6 +8,8 @@ use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\DepartmentHeadController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\ExtendedRequestOrderController;
 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -23,38 +25,31 @@ Route::get('/user', function (Request $request) {
 
 
 //قسم الادمن
-
-
 Route::middleware([
     'auth:sanctum',
     'role:admin'
 ])->group(function () {
-
-Route::post('/create-hospital-manager', [AuthController::class, 'createHospitalManager']);
-
+    Route::post('/create-hospital-manager', [AuthController::class, 'createHospitalManager']);
 });
 
 
-        Route::get(
+Route::get(
     '/purchase-requests/{id}',
     [PurchaseRequestController::class, 'show']
 )->middleware('auth:sanctum');
 
 
 //قسم مدير المشفى
-
-
 Route::middleware([
     'auth:sanctum',
     'role:hospital_manager'
 ])->group(function () {
+    Route::post('/create-employee', [AuthController::class, 'createEmployee']);
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+    Route::post('/add-products', [ProductController::class, 'store']);
+    Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'managerApproval']);
 
-Route::post('/create-employee', [AuthController::class, 'createEmployee']);
- Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
-Route::post('/add-products', [ProductController::class, 'store']);
-Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'managerApproval']
-);
-  Route::get(
+    Route::get(
         '/request-orders/pending/normal',
         [RequestOrderController::class, 'getPendingNormalRequests']
     );
@@ -64,18 +59,17 @@ Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'m
         [RequestOrderController::class, 'getPendingUrgentRequests']
     );
 
-  Route::patch(
-            '/purchase-requests/{id}/approve',
-            [PurchaseRequestController::class, 'approveManager']
-        );
+    Route::patch(
+        '/purchase-requests/{id}/approve',
+        [PurchaseRequestController::class, 'approveManager']
+    );
 
-        Route::patch(
-            '/purchase-requests/{id}/reject',
-            [PurchaseRequestController::class, 'rejectManager']
-        );
+    Route::patch(
+        '/purchase-requests/{id}/reject',
+        [PurchaseRequestController::class, 'rejectManager']
+    );
 
-
-            Route::get(
+    Route::get(
         '/purchase-requests/manager/pending/urgent',
         [PurchaseRequestController::class, 'pendingManagerUrgent']
     );
@@ -85,91 +79,67 @@ Route::patch('/requests/{id}/manager-approval',[RequestOrderController::class,'m
         [PurchaseRequestController::class, 'pendingManagerNormal']
     );
 
-
     //موافقة لمدير على طلب قسم
-Route::patch(
-    '/request-orders/{id}/approve',
-    [RequestOrderController::class, 'approveByManager']
-);
-//رفض المدير لطلب قسم 
-Route::patch(
-    '/request-orders/{id}/reject',
-    [RequestOrderController::class, 'rejectByManager']
-);
+    Route::patch(
+        '/request-orders/{id}/approve',
+        [RequestOrderController::class, 'approveByManager']
+    );
+    //رفض المدير لطلب قسم
+    Route::patch(
+        '/request-orders/{id}/reject',
+        [RequestOrderController::class, 'rejectByManager']
+    );
 
-//جلب الطلبات قيد التنفيذ 
-
-Route::get(
-    '/request-orders/in-progress',
-    [RequestOrderController::class, 'getInProgressRequests']
-);
-
-
-
- });
+    //جلب الطلبات قيد التنفيذ
+    Route::get(
+        '/request-orders/in-progress',
+        [RequestOrderController::class, 'getInProgressRequests']
+    );
+});
 
 
 //قسم مدير المستودع
-
-
-
-
 Route::middleware([
     'auth:sanctum',
     'role:warehouse_manager'
 ])->group(function () {
-
     Route::post('/add-products', [ProductController::class, 'store']);
     Route::post('/add-batch',[ProductController::class,'addBatch']);
- Route::post(  '/requests/{id}/warehouse-approval',[RequestOrderController::class,'warehouseApproval']
-    );
+    Route::post('/requests/{id}/warehouse-approval',[RequestOrderController::class,'warehouseApproval']);
 
-
- Route::get(
+    Route::get(
         '/warehouse-requests/pending/normal',
-        [RequestOrderController::class,
-        'warehousePendingNormal']
+        [RequestOrderController::class, 'warehousePendingNormal']
     );
 
     Route::get(
         '/warehouse-requests/pending/urgent',
-        [RequestOrderController::class,
-        'warehousePendingUrgent']
+        [RequestOrderController::class, 'warehousePendingUrgent']
     );
 
+    Route::post(
+        '/purchase-requests',
+        [PurchaseRequestController::class, 'store']
+    );
 
-  Route::post(
-            '/purchase-requests',
-            [PurchaseRequestController::class, 'store']
-        );
+    //الموافقة على طلب القسم
+    Route::patch(
+        '/request-orders/{id}/warehouse-approve',
+        [RequestOrderController::class, 'approveByWarehouse']
+    );
 
-//الموافقة على طلب القسم 
-
-Route::patch(
-    '/request-orders/{id}/warehouse-approve',
-    [RequestOrderController::class,
-     'approveByWarehouse']
-);
-
-//رفض طلب القسم 
-
-Route::patch(
-    '/request-orders/{id}/warehouse-reject',
-    [RequestOrderController::class,
-     'rejectByWarehouse']
-);
-
-
-
+    //رفض طلب القسم
+    Route::patch(
+        '/request-orders/{id}/warehouse-reject',
+        [RequestOrderController::class, 'rejectByWarehouse']
+    );
 });
 
 
 
-//رئيس لجنة الشراء 
-
+//رئيس لجنة الشراء
 Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
     ->group(function () {
-
         Route::patch(
             '/purchase-requests/{id}/committee/approve',
             [PurchaseRequestController::class, 'approveCommittee']
@@ -179,57 +149,27 @@ Route::middleware(['auth:sanctum', 'role:purchase_committee_head'])
             '/purchase-requests/{id}/committee/reject',
             [PurchaseRequestController::class, 'rejectCommittee']
         );
-
-
-
-        //تفاصيل طلب شراء 
-
-     
     });
 
 
 
-
-
-
-
-
-
 //قسم عام
-
-
-  Route::get(
-        '/request-orders/{id}',
-        [RequestOrderController::class, 'getRequestOrderById']
-    );
+Route::post('/send', [AuthController::class, 'sendOtp']);
+Route::post('/set-password', [AuthController::class, 'setPassword']);
 
 
 
-    Route::post('/send', [AuthController::class, 'sendOtp']);
-    Route::post('/set-password', [AuthController::class, 'setPassword']);
-
-
- 
-
-
-
-
-//قسم رئيس القسم 
-
-
+//قسم رئيس القسم
 Route::middleware([
     'auth:sanctum',
     'role:department_head'
 ])->group(function () {
-
     Route::post('/request-items', [
         RequestOrderController::class,
         'store'
     ]);
 
-
-
-      Route::get(
+    Route::get(
         '/purchase-requests/committee/pending/urgent',
         [PurchaseRequestController::class, 'pendingCommitteeUrgent']
     );
@@ -240,56 +180,42 @@ Route::middleware([
     );
 
     //استلام المواد من المستودع
+    Route::patch(
+        '/request-orders/{id}/confirm-delivery',
+        [RequestOrderController::class, 'confirmDelivery']
+    );
 
     Route::patch(
-    '/request-orders/{id}/confirm-delivery',
-    [RequestOrderController::class,
-     'confirmDelivery']
-);
-
-Route::patch(
-    '/request-orders/{id}/reject-delivery',
-    [RequestOrderController::class,
-     'rejectDelivery']
-);
-
-
+        '/request-orders/{id}/reject-delivery',
+        [RequestOrderController::class, 'rejectDelivery']
+    );
 });
 
 
 
-
-
-
-//قسم عام 
-
-
+//قسم عام
 Route::post('/login', [AuthController::class, 'login']);
 //Route::post('/login-web', [AuthController::class, 'loginWeb']);
 
-
-//استلام دفعة 
-
+//استلام دفعة
 Route::post('/add-batch',[ProductController::class,'receive']);
 
-    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
-    Route::post('/set-password', [AuthController::class, 'setPassword']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/set-password', [AuthController::class, 'setPassword']);
 
 
 Route::get('/test-resend-key', function () {
     return env('RESEND_API_KEY');
 });
 
-//جلب مواد المستودع الرئيسي 
-
+//جلب مواد المستودع الرئيسي
 Route::get(
     '/warehouse/products/{type}',
     [ProductController::class, 'getWarehouseProducts']
 );
 
 
-//جلب مواد القسم 
-
+//جلب مواد القسم
 Route::get(
     '/departments/{departmentName}/products/{type}',
     [DepartmentController::class, 'getDepartmentProducts']
@@ -297,64 +223,43 @@ Route::get(
 
 
 
-//جلب مواد المستودع 
-
+//جلب مواد المستودع
 Route::get(
     '/get/warehouse/products',
     [ProductController::class, 'getAllWarehouseProducts']
 );
 
-//جلب جميع طلبات الاقسام 
+//جلب جميع طلبات الاقسام
 Route::get(
     '/get/department-requests',
     [RequestOrderController::class, 'getAllDepartmentRequests']
 );
 
 
-//اضافة مورد 
+//اضافة مورد
 Route::post(
     '/add-supplirs',
     [ProductController::class, 'addSupplirs']
-
 );
 
-// ربط المورد بالمادة 
-
-
+// ربط المورد بالمادة
 Route::post('/products/attach-supplier', [ProductController::class, 'attachSupplier']);
 
-//جلب الموردين مع المواد 
-
+//جلب الموردين مع المواد
 Route::get('/get-all-Suppliers', [ProductController::class, 'getAllSuppliersWithProducts']);
 
-//جلب مواد المستودع مع تاريخ اخر دفعة 
-
+//جلب مواد المستودع مع تاريخ اخر دفعة
 Route::get(
     '/get/warehouse/products/with/date',
     [ProductController::class, 'getAllWarehouseProductsWith']
 );
 
-//طلبات الشراء العادية 
-
+//طلبات الشراء العادية
 Route::get('/get/requests/purchase/normal',[WarehouseController::class,'getNormalWarehouseRequests']);
 Route::get('/get/requests/purchase/urgent',[WarehouseController::class,'getUrgentWarehouseRequests']);
 
-
-//جميع طلبات الشراء للمدير 
-
+//جميع طلبات الشراء للمدير
 Route::get('/get/requests/purchase',[PurchaseRequestController::class,'getPendingManager']);
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -363,7 +268,7 @@ Route::middleware(['auth:sanctum', 'role:department_head'])
     ->group(function () {
         Route::post('/requests', [DepartmentHeadController::class, 'store']);
         Route::get('/requests', [DepartmentHeadController::class, 'index']);
-        Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
+        //Route::delete('/requests/{id}', [DepartmentHeadController::class, 'cancel']);
     });
 
 Route::get('/mail-config', function () {
@@ -378,7 +283,6 @@ Route::get('/mail-config', function () {
 });
 
 Route::get('/test-mail', function () {
-
     Mail::raw('Laravel mail test', function ($message) {
         $message->to('ايميلك@example.com')
                 ->subject('Mail Test');
@@ -388,3 +292,70 @@ Route::get('/test-mail', function () {
         'message' => 'Mail sent successfully'
     ]);
 });
+
+
+
+// ========================================
+// 🆕 Jafar's Features - Prescription System
+// ========================================
+
+// الصيدلية فقط
+Route::middleware(['auth:sanctum', 'is.pharmacy'])
+    ->prefix('prescriptions')
+    ->group(function () {
+        Route::get('/all', [PrescriptionController::class, 'index']);
+        Route::get('/statistics', [PrescriptionController::class, 'statistics']);
+        Route::patch('/{id}/status', [PrescriptionController::class, 'updateStatus'])
+            ->where('id', '[0-9]+');
+    });
+
+// رؤساء الأقسام
+Route::middleware(['auth:sanctum', 'role:department_head'])
+    ->prefix('prescriptions')
+    ->group(function () {
+        Route::post('/', [PrescriptionController::class, 'store']);
+        Route::get('/my-prescriptions', [PrescriptionController::class, 'myPrescriptions']);
+        Route::get('/my-statistics', [PrescriptionController::class, 'myStatistics']);
+        Route::put('/{id}', [PrescriptionController::class, 'update'])
+            ->where('id', '[0-9]+');
+        Route::get('/{id}', [PrescriptionController::class, 'show'])
+            ->where('id', '[0-9]+');
+        Route::delete('/{id}', [PrescriptionController::class, 'destroy'])
+            ->where('id', '[0-9]+');
+    });
+
+
+Route::middleware(['auth:sanctum', 'role:department_head'])
+    ->prefix('request-orders')
+    ->group(function () {
+        // عرض طلباتي (رئيس القسم فقط)
+        Route::get('/my-requests', [ExtendedRequestOrderController::class, 'myRequests']);
+
+        //عرض تفاصيل طلب وواحد
+        Route::get('/{id}/details', [ExtendedRequestOrderController::class, 'getDetails'])
+            ->where('id', '[0-9]+');
+
+            // تعديل طلب
+        Route::put('/{id}', [ExtendedRequestOrderController::class, 'update'])
+            ->where('id', '[0-9]+');
+
+            // إلغاء طلب (رئيس القسم فقط)
+        Route::delete('/my-requests/{id}', [ExtendedRequestOrderController::class, 'cancel'])
+            ->where('id', '[0-9]+');
+
+         // ✅ Routes الطلبات الدورية
+        Route::post('/recurring', [ExtendedRequestOrderController::class, 'createRecurring']);
+        Route::get('/recurring', [ExtendedRequestOrderController::class, 'myRecurringRequests']);
+        Route::delete('/recurring/{id}', [ExtendedRequestOrderController::class, 'cancelRecurring'])
+            ->where('id', '[0-9]+');
+         //   عرض كل نسخ قالب الطلب الدوري
+        Route::get('/recurring/{id}/instances', [ExtendedRequestOrderController::class, 'recurringInstances'])
+            ->where('id', '[0-9]+');
+    });
+
+
+
+// ⚠️ مهم جداً: هذا الـ route قديم لصديقي، تم إضافة where('id', '[0-9]+') لحمايته
+// من التقاط /my-requests كـ id
+Route::get('/request-orders/{id}', [RequestOrderController::class, 'getRequestOrderById'])
+    ->where('id', '[0-9]+');

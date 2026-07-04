@@ -13,10 +13,26 @@ class RequestOrder extends Model
         'request_type',
         'warehouse_status',
         'rejection_reason',
-        'request_type',
         'status',
-        'request_frequency'
+        'request_frequency',
+
+        'is_recurring',
+        'recurring_frequency',
+        'next_occurrence',
+        'is_active',
+
+        'parent_id',
+        'is_template',
     ];
+
+    protected $casts = [
+    'is_recurring' => 'boolean',
+    'is_active' => 'boolean',
+    'next_occurrence' => 'date',
+
+    'is_template' => 'boolean',
+
+];
 
     public function items()
     {
@@ -37,5 +53,21 @@ public function user()
 {
     return $this->belongsTo(User::class, 'requested_by');
 }
+
+
+public function recurringChildren()
+{
+    return $this->hasMany(RequestOrder::class, 'parent_id');
+}
+
+/**
+ * النسخة لها قالب واحد
+ */
+public function recurringParent()
+{
+    return $this->belongsTo(RequestOrder::class, 'parent_id');
+}
+
+
 
     }
