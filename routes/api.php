@@ -344,7 +344,8 @@ Route::get('/get/requests/purchase/urgent',[WarehouseController::class,'getUrgen
 
 Route::get('/get/requests/purchase',[PurchaseRequestController::class,'getPendingManager']);
 
-
+//حذف منتج 
+Route::delete('/delete/products/{id}', [ProductController::class, 'deleteProduct']);
 
 
 

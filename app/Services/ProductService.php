@@ -275,6 +275,30 @@ public function getAllSuppliersWithProducts()
     return $suppliers;
 }
 
+//حذف منتج 
+
+public function deleteProduct($id)
+    {
+        return DB::transaction(function () use ($id) {
+
+            $product = Product::with(['suppliers', 'batches'])
+                ->findOrFail($id);
+
+            // حذف العلاقات
+            $product->suppliers()->detach();
+            $product->batches()->delete();
+
+            // حذف المنتج
+            $product->delete();
+
+            return [
+                'message' => 'Product deleted successfully',
+                'product_id' => $id
+            ];
+        });
+    }
+
+
 }
 
 
