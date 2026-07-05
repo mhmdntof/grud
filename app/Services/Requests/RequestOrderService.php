@@ -8,6 +8,8 @@ use App\Models\RequestOrderItem;
 use App\Models\DepartmentProduct;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use App\Models\InventoryLog;
+use Illuminate\Support\Facades\Auth;
 
 class RequestOrderService
 {
@@ -422,6 +424,20 @@ public function confirmDelivery(int $requestOrderId)
                 'quantity',
                 $item->approved_quantity
             );
+
+            // ✔ تسجيل حركة المخزون
+            InventoryLog::create([
+                'action' => 'stock_out',
+                'product_id' => $item->product_id,
+                'quantity' => $item->approved_quantity,
+                'reference_type' => 'request_order',
+                'reference_id' => $requestOrder->id,
+                'data' => [
+                    'department_id' => $requestOrder->department_id,
+                    'approved_quantity' => $item->approved_quantity,
+                ],
+                'user_id' => Auth::id(),
+            ]);
         }
 
         $requestOrder->update([
@@ -433,7 +449,6 @@ public function confirmDelivery(int $requestOrderId)
         'items.product',
     ]);
 }
-
 
 
 //رفض القسم للمواد 
@@ -461,15 +476,30 @@ public function rejectDelivery(
 
         foreach ($requestOrder->items as $item) {
 
-            $approvedQuantity =
-                $item->approved_quantity ?? 0;
+            $approvedQuantity = $item->approved_quantity ?? 0;
 
             if ($approvedQuantity > 0) {
 
+                // ✔️ إرجاع الكمية للمخزون الرئيسي
                 $item->product->increment(
                     'total_quantity',
                     $approvedQuantity
                 );
+
+                // ✔️ LOG (Reject Delivery)
+                InventoryLog::create([
+                    'action' => 'delivery_rejected',
+                    'product_id' => $item->product_id,
+                    'quantity' => $approvedQuantity,
+                    'reference_type' => 'request_order',
+                    'reference_id' => $requestOrder->id,
+                    'data' => [
+                        'department_id' => $requestOrder->department_id,
+                        'reason' => $reason,
+                        'approved_quantity' => $approvedQuantity,
+                    ],
+                    'user_id' => Auth::id(),
+                ]);
             }
         }
 

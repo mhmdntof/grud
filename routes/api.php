@@ -359,6 +359,18 @@ Route::delete('/delete/products/{id}', [ProductController::class, 'deleteProduct
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 Route::middleware(['auth:sanctum', 'role:department_head'])
     ->prefix('department-head')
     ->group(function () {
