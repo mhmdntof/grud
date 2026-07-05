@@ -56,6 +56,8 @@ class ProductService
 }
 //استلام مواد من لجنة الشراء 
 
+
+
 public function receivePurchaseRequest(array $data)
 {
     return DB::transaction(function () use ($data) {
@@ -70,7 +72,7 @@ public function receivePurchaseRequest(array $data)
             ];
         }
 
-        // ✔️ جلب المورد من الطلب (مو من الدخل)
+        // ✔️ المورد من الطلب
         $supplierId = $request->supplier_id;
 
         foreach ($data['items'] as $item) {
@@ -91,10 +93,26 @@ public function receivePurchaseRequest(array $data)
             // ✔️ تحديث المخزون
             $product->increment('total_quantity', $item['quantity']);
 
-            // ✔️ تحديث الكمية المستلمة
+            // ✔️ تحديث الطلب
             PurchaseRequestItem::where('purchase_request_id', $request->id)
                 ->where('product_id', $item['product_id'])
                 ->increment('received_quantity', $item['quantity']);
+
+            // ✔️ LOG (Inventory Archive)
+            InventoryLog::create([
+                'action' => 'stock_in',
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'reference_type' => 'purchase_request',
+                'reference_id' => $request->id,
+                'data' => [
+                    'batch_number' => $item['batch_number'],
+                    'expire_date' => $item['expire_date'],
+                    'purchase_price' => $item['purchase_price'] ?? null,
+                    'supplier_id' => $supplierId,
+                ],
+                'user_id' => Auth::id(),
+            ]);
         }
 
         // ✔️ تحديث حالة الطلب
