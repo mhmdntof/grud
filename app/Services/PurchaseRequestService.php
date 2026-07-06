@@ -6,6 +6,9 @@ use App\Models\PurchaseRequest;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\RequestOrder;
+use App\Http\Requests\UploadInvoiceRequest;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class PurchaseRequestService
 {
@@ -472,6 +475,37 @@ public function getPendingManagerRequests()
         ];
     });
 }
+
+
+//رفع فاتورة 
+
+
+public function uploadInvoice(
+    int $purchaseRequestId,
+    UploadedFile $invoice,
+    ?string $invoiceNumber = null
+)
+{
+    $request = PurchaseRequest::findOrFail($purchaseRequestId);
+
+    if ($request->status !== 'awaiting_delivery') {
+        throw new \Exception(
+            'Invoice can only be uploaded when request is awaiting delivery.'
+        );
+    }
+
+    $path = $invoice->store('purchase-invoices', 'public');
+
+    $request->update([
+        'invoice_file' => $path,
+        'invoice_number' => $invoiceNumber,
+        'invoice_uploaded_at' => now(),
+        'status' => 'invoice_uploaded',
+    ]);
+
+    return $request;
+}
+
 
 
 }

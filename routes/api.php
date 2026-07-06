@@ -347,7 +347,12 @@ Route::get('/get/requests/purchase',[PurchaseRequestController::class,'getPendin
 //حذف منتج 
 Route::delete('/delete/products/{id}', [ProductController::class, 'deleteProduct']);
 
+// رفع فاتورة 
 
+Route::post(
+    'purchase-requests/{purchaseRequest}/invoice',
+    [PurchaseRequestController::class, 'uploadInvoice']
+);
 
 
 
