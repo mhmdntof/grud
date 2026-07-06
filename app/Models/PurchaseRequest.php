@@ -22,6 +22,7 @@ class PurchaseRequest extends Model
         'request_frequency',
         'invoice_number',
         'invoice',
+        'invoice_file'
     ];
 
     /*
