@@ -7,8 +7,10 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\RequestOrder;
 use App\Http\Requests\UploadInvoiceRequest;
+use Cloudinary\Api\Upload\UploadApi;
+use Cloudinary\Configuration\Configuration;
 use Illuminate\Http\UploadedFile;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 
 use Illuminate\Support\Facades\Storage;
@@ -567,23 +569,34 @@ public function uploadInvoice(
         );
     }
 
-    // رفع الصورة إلى Cloudinary
-   $uploadedFile = Cloudinary::upload(
-    $invoice->getRealPath(),
-    [
-        'folder' => 'purchase-invoices',
-    ]
-);
+    Configuration::instance([
+        'cloud' => [
+            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+            'api_key' => env('CLOUDINARY_KEY'),
+            'api_secret' => env('CLOUDINARY_SECRET'),
+        ],
+        'url' => [
+            'secure' => true,
+        ],
+    ]);
+
+    $result = (new UploadApi())->upload(
+        $invoice->getRealPath(),
+        [
+            'folder' => 'purchase-invoices',
+            'resource_type' => 'image',
+        ]
+    );
 
     $request->update([
-        'invoice_file' => $uploadedFile->getSecurePath(), // رابط الصورة
-        'invoice_number' => $invoiceNumber,
+        'invoice_file'        => $result['secure_url'],
+        'invoice_public_id'   => $result['public_id'],
+        'invoice_number'      => $invoiceNumber,
         'invoice_uploaded_at' => now(),
-        'status' => 'invoice_uploaded',
+        'status'              => 'invoice_uploaded',
     ]);
 
     return $request->fresh();
 }
-
 
 }
