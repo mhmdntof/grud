@@ -135,7 +135,7 @@ public function rejectByCommittee($id, $rejectedBy, $reason = null)
 
 public function getPendingCommitteeUrgentRequests()
 {
-    return PurchaseRequest::with([
+    $requests = PurchaseRequest::with([
         'items.product.suppliers',
         'items.product' => function ($query) {
             $query->select('id', 'brand');
@@ -159,12 +159,47 @@ public function getPendingCommitteeUrgentRequests()
         'expected_budget',
         'reason',
         'created_at',
-        'request_frequency' // ✔️ التعديل الجديد
+        'request_frequency'
     )
     ->where('status', 'in_progress')
     ->where('request_type', 'urgent')
     ->latest()
     ->get();
+
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'requested_by' => $request->requested_by,
+            'request_type' => $request->request_type,
+            'status' => $request->status,
+            'expected_budget' => $request->expected_budget,
+            'reason' => $request->reason,
+            'created_at' => $request->created_at,
+            'request_frequency' => $request->request_frequency,
+
+            'items' => $request->items->map(function ($item) {
+
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+
+                    // ✔️ نخليها نظيفة بدون pivot
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'received_quantity' => $item->received_quantity,
+                ];
+            }),
+        ];
+    });
 }
 
 //الطلبات العادية 
@@ -173,7 +208,7 @@ public function getPendingCommitteeUrgentRequests()
 public function getPendingCommitteeNormalRequests()
 {
 
-  return PurchaseRequest::with([
+  $requests = PurchaseRequest::with([
         'items.product.suppliers',
         'items.product' => function ($query) {
             $query->select('id', 'brand');
@@ -197,12 +232,47 @@ public function getPendingCommitteeNormalRequests()
         'expected_budget',
         'reason',
         'created_at',
-        'request_frequency' // ✔️ التعديل الجديد
+        'request_frequency'
     )
     ->where('status', 'in_progress')
     ->where('request_type', 'normal')
     ->latest()
     ->get();
+
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'requested_by' => $request->requested_by,
+            'request_type' => $request->request_type,
+            'status' => $request->status,
+            'expected_budget' => $request->expected_budget,
+            'reason' => $request->reason,
+            'created_at' => $request->created_at,
+            'request_frequency' => $request->request_frequency,
+
+            'items' => $request->items->map(function ($item) {
+
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+
+                    // ✔️ نخليها نظيفة بدون pivot
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'received_quantity' => $item->received_quantity,
+                ];
+            }),
+        ];
+    });
 }
 
 
