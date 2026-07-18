@@ -202,4 +202,12 @@ public function uploadInvoice(
 }
 
 
+//جلب فاتورة طلب 
+public function getInvoice($purchaseRequestId)
+{
+    return response()->json(
+        $this->purchaseRequestService->getInvoice($purchaseRequestId)
+    );
+}
+
 }

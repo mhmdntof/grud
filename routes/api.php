@@ -360,7 +360,12 @@ Route::post(
 
 
 
+//جلب فواتير طلب 
 
+Route::get(
+    '/purchase-requests/{purchaseRequestId}/invoice',
+    [PurchaseRequestController::class, 'getInvoice']
+);
 
 
 

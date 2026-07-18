@@ -599,4 +599,25 @@ public function uploadInvoice(
     return $request->fresh();
 }
 
+
+//جلب فواتير طلب 
+
+
+public function getInvoice(int $purchaseRequestId)
+{
+    $request = PurchaseRequest::findOrFail($purchaseRequestId);
+
+    if (!$request->invoice_file) {
+        throw new \Exception('No invoice uploaded for this request.');
+    }
+
+    return [
+        'purchase_request_id' => $request->id,
+        'invoice_number' => $request->invoice_number,
+        'invoice_uploaded_at' => $request->invoice_uploaded_at,
+        'invoice_url' => $request->invoice_file,
+    ];
+}
+
+
 }
