@@ -568,13 +568,12 @@ public function uploadInvoice(
     }
 
     // رفع الصورة إلى Cloudinary
-    $uploadedFile = Cloudinary::upload(
-        $invoice->getRealPath(),
-        [
-            'folder' => 'purchase-invoices',
-            'resource_type' => 'image',
-        ]
-    );
+   $uploadedFile = Cloudinary::upload(
+    $invoice->getRealPath(),
+    [
+        'folder' => 'purchase-invoices',
+    ]
+);
 
     $request->update([
         'invoice_file' => $uploadedFile->getSecurePath(), // رابط الصورة
