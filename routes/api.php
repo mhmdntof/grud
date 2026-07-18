@@ -229,15 +229,7 @@ Route::middleware([
 
 
 
-      Route::get(
-        '/purchase-requests/committee/pending/urgent',
-        [PurchaseRequestController::class, 'pendingCommitteeUrgent']
-    );
-
-    Route::get(
-        '/purchase-requests/committee/pending/normal',
-        [PurchaseRequestController::class, 'pendingCommitteeNormal']
-    );
+     
 
     //استلام المواد من المستودع
 
@@ -356,7 +348,15 @@ Route::post(
 
 
 
+ Route::get(
+        '/purchase-requests/committee/pending/urgent',
+        [PurchaseRequestController::class, 'pendingCommitteeUrgent']
+    );
 
+    Route::get(
+        '/purchase-requests/committee/pending/normal',
+        [PurchaseRequestController::class, 'pendingCommitteeNormal']
+    );
 
 
 
