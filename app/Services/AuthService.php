@@ -14,9 +14,12 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\Log;
 use Resend\Laravel\Facades\Resend;
 
+use App\Mail\SendOtpMail;
+
+
 class AuthService
 {
- public function createEmployee(array $data)
+public function createEmployee(array $data)
 {
     // البحث عن الرول
     $role = Role::where('name', $data['role'])->first();
@@ -38,7 +41,7 @@ class AuthService
 
     // إنشاء المستخدم
     $user = User::create([
-        'name' => $data['name'] ?? null,   // 👈 حماية إضافية
+        'name' => $data['name'] ?? null,
         'email' => $data['email'],
         'role_id' => $role->id,
         'department_id' => $department->id,
@@ -51,16 +54,19 @@ class AuthService
     // حذف أي OTP قديم
     UserOtp::where('user_id', $user->id)->delete();
 
-    // إنشاء OTP جديد
+    // حفظ OTP
     UserOtp::create([
         'user_id' => $user->id,
         'otp' => $otp,
         'expires_at' => now()->addHours(24),
     ]);
 
+    // إرسال OTP على الإيميل
+    Mail::to($user->email)
+        ->send(new SendOtpMail($otp, $user));
+
     return [
         'user' => $user,
-        'otp' => $otp,
     ];
 }
   public function login(array $data)
