@@ -173,4 +173,14 @@ public function verifyOtp(VerifyOtpRequest $request)
     return response()->json($result);
 }
 
+
+//المستخدم الحالي 
+
+public function getCurrentUser()
+{
+    return response()->json(
+        $this->authService->getCurrentUser()
+    );
+}
+
 }

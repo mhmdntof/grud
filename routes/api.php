@@ -389,6 +389,14 @@ Route::get(
 
 
 
+Route::middleware('auth:sanctum')->get(
+    '/current-user',
+    [AuthController::class, 'getCurrentUser']
+);
+
+
+
+
 
 
 

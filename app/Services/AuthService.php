@@ -306,6 +306,25 @@ public function loginWeb(array $data)
 }
 
 
+//المستخدم الحالي 
 
+
+
+
+public function getCurrentUser()
+{
+    /** @var User $user */
+    $user = User::with(['role', 'department'])
+        ->findOrFail(Auth::id());
+
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'phone' => $user->phone,
+        'role' => $user->role->name,
+        'department' => $user->department?->name,
+    ];
+}
 
 }
