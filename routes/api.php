@@ -287,7 +287,11 @@ Route::get(
     [DepartmentController::class, 'getDepartmentProducts']
 );
 
-
+//جلب جميع مواد القسم 
+Route::get(
+    '/get/departments/{departmentName}/products',
+    [DepartmentController::class, 'getAllDepartmentProducts']
+);
 
 //جلب مواد المستودع 
 

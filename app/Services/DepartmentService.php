@@ -59,4 +59,39 @@ public function getDepartmentProducts(
         })->values(),
     ];
 }
+
+
+//جلب جميع مواد مستودع  القسم 
+
+public function getAllDepartmentProducts(string $departmentName)
+{
+    $department = Department::where('name', $departmentName)->firstOrFail();
+
+    $products = DepartmentProduct::with([
+            'product.suppliers'
+        ])
+        ->where('department_id', $department->id)
+        ->get();
+
+    return [
+        'department_name' => $department->name,
+        'products' => $products->map(function ($item) {
+            return [
+                'product_id' => $item->product_id,
+                'product_name' => $item->product->name ?? null,
+                'brand' => $item->product->brand ?? null,
+                'type' => $item->product->type ?? null,
+                'quantity' => $item->quantity,
+
+                'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                    return [
+                        'id' => $supplier->id,
+                        'name' => $supplier->name,
+                    ];
+                })->values(),
+            ];
+        })->values(),
+    ];
+}
+
 }
