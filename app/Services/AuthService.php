@@ -237,56 +237,48 @@ public function setPassword(array $data)
     ];
 }
 
-public function resendOtp(array $data)
+
+
+
+public function resendOtp(string $email)
 {
-    // 1. جلب المستخدم
-    $user = User::where(
-        'email',
-        $data['email']
-    )->first();
+    $user = User::where('email', $email)->first();
 
-    // 2. تحقق من وجود المستخدم
     if (!$user) {
-
-        return [
-
-            'success' => false,
-
-            'message' => 'User not found'
-        ];
+        throw new \Exception('User not found.');
     }
 
-    // 3. حذف OTP القديم
-    UserOtp::where(
-        'user_id',
-        $user->id
-    )->delete();
+    $otp = null;
 
-    // 4. إنشاء OTP جديد
-    $otp = rand(100000, 999999);
+   DB::transaction(function () use (
+    $user,
+    &$otp
+) {
 
-    // 5. تخزين OTP الجديد
+    $otp = (string) rand(100000, 999999);
+
+    UserOtp::where('user_id', $user->id)->delete();
+
     UserOtp::create([
-
         'user_id' => $user->id,
-
         'otp' => $otp,
-
-       'expires_at' => now()->addHours(24),
+        'expires_at' => now()->addHours(24),
     ]);
 
-    // 6. إرسال الإيميل
-    Mail::to($user->email)->send(
+});
 
-        new OtpMail($otp)
 
-    );
+if ($otp === null) {
+    throw new \Exception('Failed to generate OTP.');
+}
+
+
+Mail::to($user->email)
+    ->send(new SendOtpMail($otp, $user));
+
 
     return [
-
-        'success' => true,
-
-        'message' => 'OTP resent successfully'
+        'message' => 'OTP sent successfully.',
     ];
 }
 

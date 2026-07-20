@@ -368,7 +368,11 @@ Route::get(
 );
 
 
-
+//جلب طلبات الشراء المرفوضة 
+Route::get(
+    '/get/purchase-requests/rejected',
+    [PurchaseRequestController::class, 'getRejectedPurchaseRequests']
+);
 
 
 

@@ -210,4 +210,13 @@ public function getInvoice($purchaseRequestId)
     );
 }
 
+//الطلبات المرفوضة 
+
+public function getRejectedPurchaseRequests()
+{
+    return response()->json(
+        $this->purchaseRequestService->getRejectedPurchaseRequests()
+    );
+}
+
 }

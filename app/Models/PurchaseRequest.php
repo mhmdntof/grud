@@ -48,6 +48,9 @@ class PurchaseRequest extends Model
     {
         return $this->hasMany(PurchaseRequestItem::class);
     }
-
+public function rejectedBy()
+{
+    return $this->belongsTo(User::class, 'rejected_by');
+}
    
 }

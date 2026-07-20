@@ -618,6 +618,33 @@ public function getInvoice(int $purchaseRequestId)
         'invoice_url' => $request->invoice_file,
     ];
 }
+// الطلبات المرفوضة 
 
+public function getRejectedPurchaseRequests()
+{
+    $requests = PurchaseRequest::with([
+        'department',
+        'rejectedBy',
+    ])
+    ->where('status', 'rejected')
+    ->latest()
+    ->get();
+
+    return $requests->map(function ($request) {
+        return [
+            'id' => $request->id,
+            'department_name' => $request->department->name,
+            'status' => $request->status,
+            'request_frequency' => $request->request_frequency,
+            'created_at' => $request->created_at,
+
+            'rejected_by' => [
+                'id' => $request->rejectedBy?->id,
+                'name' => $request->rejectedBy?->name,
+                'email' => $request->rejectedBy?->email,
+            ],
+        ];
+    });
+}
 
 }

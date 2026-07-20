@@ -55,7 +55,18 @@ class AuthController extends Controller
     ]);
 }
 
+public function resendOtp(Request $request)
+{
+    $request->validate([
+        'email' => ['required', 'email'],
+    ]);
 
+    return response()->json(
+        $this->authService->resendOtp(
+            $request->email
+        )
+    );
+}
 
    
 
@@ -89,31 +100,8 @@ public function setPassword(SetPasswordRequest $request)
     }
 
     return response()->json($result);
-}
-public function resendOtp(
-    ResendOtpRequest $request
-)
-{
-    $result = $this->authService->resendOtp(
 
-        $request->validated()
 
-    );
-
-    if (!$result['success']) {
-
-        return response()->json([
-
-            'message' => $result['message']
-
-        ], 400);
-    }
-
-    return response()->json([
-
-        'message' => $result['message']
-
-    ]);
 }
 
 
