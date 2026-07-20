@@ -376,7 +376,11 @@ Route::get(
 
 
 
-
+//جلب طلبات الاقسام المرفوضة 
+Route::get(
+    '/get/request-orders/rejected',
+    [RequestOrderController::class, 'getRejectedRequestOrders']
+);
 
 
 

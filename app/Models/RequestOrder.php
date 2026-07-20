@@ -15,7 +15,8 @@ class RequestOrder extends Model
         'rejection_reason',
         'request_type',
         'status',
-        'request_frequency'
+        'request_frequency',
+        'rejected_by',
     ];
 
     public function items()
@@ -38,4 +39,9 @@ public function user()
     return $this->belongsTo(User::class, 'requested_by');
 }
 
+public function rejectedBy()
+{
+    return $this->belongsTo(User::class, 'rejected_by');
+}
+ 
     }

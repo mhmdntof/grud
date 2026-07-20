@@ -639,6 +639,9 @@ public function getRejectedPurchaseRequests()
                 'name' => $request->rejectedBy?->name,
                 'email' => $request->rejectedBy?->email,
             ],
+
+ 'rejection_reason' => $request->rejection_reason,
+
         ];
     });
 }

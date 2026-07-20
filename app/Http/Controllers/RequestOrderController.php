@@ -214,6 +214,13 @@ public function getAllDepartmentRequests()
         'data' => $this->requestOrderService->getAllDepartmentRequests()
     ]);
 }
+//الطلبات المرفوضة 
 
+public function getRejectedRequestOrders()
+{
+    return response()->json(
+        $this->requestOrderService->getRejectedRequestOrders()
+    );
+}
 
 }

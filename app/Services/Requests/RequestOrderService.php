@@ -611,4 +611,40 @@ public function getAllDepartmentRequests()
         ];
     })->values();
 }
+
+
+//الطلبات المرفوضة 
+
+
+public function getRejectedRequestOrders()
+{
+    $requests = RequestOrder::with([
+        'department:id,name',
+        'rejectedBy:id,name,email',
+    ])
+        ->where('status', 'rejected')
+        ->latest()
+        ->get();
+
+    return $requests->map(function ($request) {
+        return [
+            'id' => $request->id,
+            'department_name' => $request->department->name,
+            'status' => $request->status,
+            'request_type' => $request->request_type,
+            'request_frequency' => $request->request_frequency,
+            'created_at' => $request->created_at,
+
+            'rejected_by' => [
+                'id' => $request->rejectedBy?->id,
+                'name' => $request->rejectedBy?->name,
+                'email' => $request->rejectedBy?->email,
+            ],
+
+            'rejection_reason' => $request->rejection_reason,
+        ];
+    });
+}
+
+
 }
