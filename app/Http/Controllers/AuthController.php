@@ -183,4 +183,15 @@ public function getCurrentUser()
     );
 }
 
+
+//جميع المستخدمين 
+
+public function getAllUsers()
+{
+    return response()->json(
+        $this->authService->getAllUsers()
+    );
+}
+
+
 }

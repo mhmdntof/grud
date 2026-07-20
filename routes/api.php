@@ -387,7 +387,7 @@ Route::get(
 );
 
 
-
+//المستخدم الحالي 
 
 Route::middleware('auth:sanctum')->get(
     '/current-user',
@@ -395,7 +395,12 @@ Route::middleware('auth:sanctum')->get(
 );
 
 
+//جميع المستخدمين 
 
+Route::get(
+    '/users',
+    [AuthController::class, 'getAllUsers']
+);
 
 
 

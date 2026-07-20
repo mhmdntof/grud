@@ -327,4 +327,26 @@ public function getCurrentUser()
     ];
 }
 
+//جميع المستخدمين 
+
+
+public function getAllUsers()
+{
+    return User::with(['role', 'department'])
+        ->get()
+        ->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role?->name,
+                'department' => $user->department?->name,
+                'status' => $user->status,
+            ];
+        })
+        ->values();
+}
+
+
 }
