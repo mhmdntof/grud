@@ -623,7 +623,7 @@ public function getInvoice(int $purchaseRequestId)
 public function getRejectedPurchaseRequests()
 {
     $requests = PurchaseRequest::with('rejectedBy')
-        ->where('status', 'delivery_rejected')
+        ->where('status', 'rejected')
         ->latest()
         ->get();
 
