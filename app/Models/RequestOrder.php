@@ -23,6 +23,7 @@ class RequestOrder extends Model
 
         'parent_id',
         'is_template',
+        'rejected_by',
     ];
 
     protected $casts = [
@@ -69,5 +70,10 @@ public function recurringParent()
 }
 
 
+
+public function rejectedBy()
+{
+    return $this->belongsTo(User::class, 'rejected_by');
+}
 
     }

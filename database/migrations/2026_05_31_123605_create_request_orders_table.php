@@ -22,6 +22,10 @@ return new class extends Migration
     $table->foreignId('requested_by')
         ->constrained('users')
         ->onDelete('cascade');
+        $table->foreignId('rejected_by')
+    ->nullable()
+    ->constrained('users')
+    ->nullOnDelete();
 
     // normal | urgent
     $table->string('request_type');

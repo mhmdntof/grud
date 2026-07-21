@@ -6,6 +6,14 @@ use App\Models\PurchaseRequest;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\RequestOrder;
+use App\Http\Requests\UploadInvoiceRequest;
+use Cloudinary\Api\Upload\UploadApi;
+use Cloudinary\Configuration\Configuration;
+use Illuminate\Http\UploadedFile;
+
+
+
+use Illuminate\Support\Facades\Storage;
 
 class PurchaseRequestService
 {
@@ -132,7 +140,7 @@ public function rejectByCommittee($id, $rejectedBy, $reason = null)
 
 public function getPendingCommitteeUrgentRequests()
 {
-    return PurchaseRequest::with([
+    $requests = PurchaseRequest::with([
         'items.product.suppliers',
         'items.product' => function ($query) {
             $query->select('id', 'brand');
@@ -156,12 +164,47 @@ public function getPendingCommitteeUrgentRequests()
         'expected_budget',
         'reason',
         'created_at',
-        'request_frequency' // ✔️ التعديل الجديد
+        'request_frequency'
     )
     ->where('status', 'in_progress')
     ->where('request_type', 'urgent')
     ->latest()
     ->get();
+
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'requested_by' => $request->requested_by,
+            'request_type' => $request->request_type,
+            'status' => $request->status,
+            'expected_budget' => $request->expected_budget,
+            'reason' => $request->reason,
+            'created_at' => $request->created_at,
+            'request_frequency' => $request->request_frequency,
+
+            'items' => $request->items->map(function ($item) {
+
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+
+                    // ✔️ نخليها نظيفة بدون pivot
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'received_quantity' => $item->received_quantity,
+                ];
+            }),
+        ];
+    });
 }
 
 //الطلبات العادية 
@@ -170,7 +213,7 @@ public function getPendingCommitteeUrgentRequests()
 public function getPendingCommitteeNormalRequests()
 {
 
-  return PurchaseRequest::with([
+  $requests = PurchaseRequest::with([
         'items.product.suppliers',
         'items.product' => function ($query) {
             $query->select('id', 'brand');
@@ -194,12 +237,47 @@ public function getPendingCommitteeNormalRequests()
         'expected_budget',
         'reason',
         'created_at',
-        'request_frequency' // ✔️ التعديل الجديد
+        'request_frequency'
     )
     ->where('status', 'in_progress')
     ->where('request_type', 'normal')
     ->latest()
     ->get();
+
+    return $requests->map(function ($request) {
+
+        return [
+            'id' => $request->id,
+            'requested_by' => $request->requested_by,
+            'request_type' => $request->request_type,
+            'status' => $request->status,
+            'expected_budget' => $request->expected_budget,
+            'reason' => $request->reason,
+            'created_at' => $request->created_at,
+            'request_frequency' => $request->request_frequency,
+
+            'items' => $request->items->map(function ($item) {
+
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? null,
+                    'brand' => $item->product->brand ?? null,
+
+                    // ✔️ نخليها نظيفة بدون pivot
+                    'suppliers' => $item->product->suppliers->map(function ($supplier) {
+                        return [
+                            'id' => $supplier->id,
+                            'name' => $supplier->name,
+                        ];
+                    }),
+
+                    'quantity' => $item->quantity,
+                    'unit' => $item->unit,
+                    'received_quantity' => $item->received_quantity,
+                ];
+            }),
+        ];
+    });
 }
 
 
@@ -473,5 +551,99 @@ public function getPendingManagerRequests()
     });
 }
 
+
+//رفع فاتورة 
+
+
+public function uploadInvoice(
+    int $purchaseRequestId,
+    UploadedFile $invoice,
+    ?string $invoiceNumber = null
+)
+{
+    $request = PurchaseRequest::findOrFail($purchaseRequestId);
+
+    if ($request->status !== 'awaiting_delivery') {
+        throw new \Exception(
+            'Invoice can only be uploaded when request is awaiting delivery.'
+        );
+    }
+
+    Configuration::instance([
+        'cloud' => [
+            'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+            'api_key' => env('CLOUDINARY_KEY'),
+            'api_secret' => env('CLOUDINARY_SECRET'),
+        ],
+        'url' => [
+            'secure' => true,
+        ],
+    ]);
+
+    $result = (new UploadApi())->upload(
+        $invoice->getRealPath(),
+        [
+            'folder' => 'purchase-invoices',
+            'resource_type' => 'image',
+        ]
+    );
+
+    $request->update([
+        'invoice_file'        => $result['secure_url'],
+        'invoice_public_id'   => $result['public_id'],
+        'invoice_number'      => $invoiceNumber,
+        'invoice_uploaded_at' => now(),
+        'status'              => 'invoice_uploaded',
+    ]);
+
+    return $request->fresh();
+}
+
+
+//جلب فواتير طلب 
+
+
+public function getInvoice(int $purchaseRequestId)
+{
+    $request = PurchaseRequest::findOrFail($purchaseRequestId);
+
+    if (!$request->invoice_file) {
+        throw new \Exception('No invoice uploaded for this request.');
+    }
+
+    return [
+        'purchase_request_id' => $request->id,
+        'invoice_number' => $request->invoice_number,
+        'invoice_uploaded_at' => $request->invoice_uploaded_at,
+        'invoice_url' => $request->invoice_file,
+    ];
+}
+// الطلبات المرفوضة 
+
+public function getRejectedPurchaseRequests()
+{
+    $requests = PurchaseRequest::with('rejectedBy')
+        ->where('status', 'rejected')
+        ->latest()
+        ->get();
+
+    return $requests->map(function ($request) {
+        return [
+            'id' => $request->id,
+            'status' => $request->status,
+            'request_frequency' => $request->request_frequency,
+            'created_at' => $request->created_at,
+
+            'rejected_by' => [
+                'id' => $request->rejectedBy?->id,
+                'name' => $request->rejectedBy?->name,
+                'email' => $request->rejectedBy?->email,
+            ],
+
+ 'rejection_reason' => $request->rejection_reason,
+
+        ];
+    });
+}
 
 }

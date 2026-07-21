@@ -68,4 +68,6 @@ public function otps()
 {
     return $this->hasMany(UserOtp::class);
 }
+
+
 }

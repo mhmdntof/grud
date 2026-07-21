@@ -19,7 +19,10 @@ class PurchaseRequest extends Model
         'manager_status',
         'committee_status',
         'rejection_reason',
-        'request_frequency'
+        'request_frequency',
+        'invoice_number',
+        'invoice',
+        'invoice_file'
     ];
 
     /*
@@ -45,6 +48,9 @@ class PurchaseRequest extends Model
     {
         return $this->hasMany(PurchaseRequestItem::class);
     }
-
+public function rejectedBy()
+{
+    return $this->belongsTo(User::class, 'rejected_by');
+}
    
 }

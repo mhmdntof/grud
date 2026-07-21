@@ -8,6 +8,8 @@ use App\Models\RequestOrderItem;
 use App\Models\DepartmentProduct;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use App\Models\InventoryLog;
+use Illuminate\Support\Facades\Auth;
 
 class RequestOrderService
 {
@@ -422,6 +424,20 @@ public function confirmDelivery(int $requestOrderId)
                 'quantity',
                 $item->approved_quantity
             );
+
+            // ✔ تسجيل حركة المخزون
+            InventoryLog::create([
+                'action' => 'stock_out',
+                'product_id' => $item->product_id,
+                'quantity' => $item->approved_quantity,
+                'reference_type' => 'request_order',
+                'reference_id' => $requestOrder->id,
+                'data' => [
+                    'department_id' => $requestOrder->department_id,
+                    'approved_quantity' => $item->approved_quantity,
+                ],
+                'user_id' => Auth::id(),
+            ]);
         }
 
         $requestOrder->update([
@@ -433,7 +449,6 @@ public function confirmDelivery(int $requestOrderId)
         'items.product',
     ]);
 }
-
 
 
 //رفض القسم للمواد 
@@ -461,15 +476,30 @@ public function rejectDelivery(
 
         foreach ($requestOrder->items as $item) {
 
-            $approvedQuantity =
-                $item->approved_quantity ?? 0;
+            $approvedQuantity = $item->approved_quantity ?? 0;
 
             if ($approvedQuantity > 0) {
 
+                // ✔️ إرجاع الكمية للمخزون الرئيسي
                 $item->product->increment(
                     'total_quantity',
                     $approvedQuantity
                 );
+
+                // ✔️ LOG (Reject Delivery)
+                InventoryLog::create([
+                    'action' => 'delivery_rejected',
+                    'product_id' => $item->product_id,
+                    'quantity' => $approvedQuantity,
+                    'reference_type' => 'request_order',
+                    'reference_id' => $requestOrder->id,
+                    'data' => [
+                        'department_id' => $requestOrder->department_id,
+                        'reason' => $reason,
+                        'approved_quantity' => $approvedQuantity,
+                    ],
+                    'user_id' => Auth::id(),
+                ]);
             }
         }
 
@@ -581,4 +611,40 @@ public function getAllDepartmentRequests()
         ];
     })->values();
 }
+
+
+//الطلبات المرفوضة 
+
+
+public function getRejectedRequestOrders()
+{
+    $requests = RequestOrder::with([
+        'department:id,name',
+        'rejectedBy:id,name,email',
+    ])
+        ->where('status', 'rejected')
+        ->latest()
+        ->get();
+
+    return $requests->map(function ($request) {
+        return [
+            'id' => $request->id,
+            'department_name' => $request->department->name,
+            'status' => $request->status,
+            'request_type' => $request->request_type,
+            'request_frequency' => $request->request_frequency,
+            'created_at' => $request->created_at,
+
+            'rejected_by' => [
+                'id' => $request->rejectedBy?->id,
+                'name' => $request->rejectedBy?->name,
+                'email' => $request->rejectedBy?->email,
+            ],
+
+            'rejection_reason' => $request->rejection_reason,
+        ];
+    });
+}
+
+
 }

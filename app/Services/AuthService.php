@@ -13,56 +13,86 @@ use App\Models\Department;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\Log;
 use Resend\Laravel\Facades\Resend;
+use Illuminate\Support\Facades\DB;
+
+
+use App\Mail\SendOtpMail;
+
 
 class AuthService
 {
- public function createEmployee(array $data)
+public function createEmployee(array $data)
 {
-    // البحث عن الرول
-    $role = Role::where('name', $data['role'])->first();
+    $user = null;
+    $otp = null;
 
-    if (!$role) {
-        return [
-            'error' => 'Role not found'
-        ];
+    DB::transaction(function () use (
+        $data,
+        &$user,
+        &$otp
+    ) {
+
+        // البحث عن الرول
+        $role = Role::where('name', $data['role'])->first();
+
+        if (!$role) {
+            throw new \Exception('Role not found');
+        }
+
+        // البحث عن القسم
+        $department = Department::where('name', $data['department'])->first();
+
+        if (!$department) {
+            throw new \Exception('Department not found');
+        }
+
+
+        // إنشاء المستخدم
+        $user = User::create([
+            'name' => $data['name'] ?? null,
+            'email' => $data['email'],
+            'role_id' => $role->id,
+            'department_id' => $department->id,
+            'status' => false,
+        ]);
+
+
+        // إنشاء OTP
+        $otp = rand(100000, 999999);
+
+
+        // حذف أي OTP قديم
+        UserOtp::where('user_id', $user->id)->delete();
+
+
+        // حفظ OTP جديد
+        UserOtp::create([
+            'user_id' => $user->id,
+            'otp' => $otp,
+            'expires_at' => now()->addHours(24),
+        ]);
+
+    });
+
+
+    // إرسال الإيميل بعد نجاح الـ Transaction
+    
+
+
+    if (!$user || !$otp) {
+        throw new \Exception('Failed to create employee OTP.');
     }
 
-    // البحث عن القسم
-    $department = Department::where('name', $data['department'])->first();
 
-    if (!$department) {
-        return [
-            'error' => 'Department not found'
-        ];
-    }
+    Mail::to($user->email)
+        ->send(new SendOtpMail((string) $otp, $user));
 
-    // إنشاء المستخدم
-    $user = User::create([
-        'name' => $data['name'] ?? null,   // 👈 حماية إضافية
-        'email' => $data['email'],
-        'role_id' => $role->id,
-        'department_id' => $department->id,
-        'status' => false,
-    ]);
-
-    // إنشاء OTP
-    $otp = rand(100000, 999999);
-
-    // حذف أي OTP قديم
-    UserOtp::where('user_id', $user->id)->delete();
-
-    // إنشاء OTP جديد
-    UserOtp::create([
-        'user_id' => $user->id,
-        'otp' => $otp,
-        'expires_at' => now()->addHours(24),
-    ]);
 
     return [
         'user' => $user,
-        'otp' => $otp,
     ];
 }
+
   public function login(array $data)
 {
     // 1. البحث عن المستخدم
@@ -207,56 +237,48 @@ public function setPassword(array $data)
     ];
 }
 
-public function resendOtp(array $data)
+
+
+
+public function resendOtp(string $email)
 {
-    // 1. جلب المستخدم
-    $user = User::where(
-        'email',
-        $data['email']
-    )->first();
+    $user = User::where('email', $email)->first();
 
-    // 2. تحقق من وجود المستخدم
     if (!$user) {
-
-        return [
-
-            'success' => false,
-
-            'message' => 'User not found'
-        ];
+        throw new \Exception('User not found.');
     }
 
-    // 3. حذف OTP القديم
-    UserOtp::where(
-        'user_id',
-        $user->id
-    )->delete();
+    $otp = null;
 
-    // 4. إنشاء OTP جديد
-    $otp = rand(100000, 999999);
+   DB::transaction(function () use (
+    $user,
+    &$otp
+) {
 
-    // 5. تخزين OTP الجديد
+    $otp = (string) rand(100000, 999999);
+
+    UserOtp::where('user_id', $user->id)->delete();
+
     UserOtp::create([
-
         'user_id' => $user->id,
-
         'otp' => $otp,
-
-       'expires_at' => now()->addHours(24),
+        'expires_at' => now()->addHours(24),
     ]);
 
-    // 6. إرسال الإيميل
-    Mail::to($user->email)->send(
+});
 
-        new OtpMail($otp)
 
-    );
+if ($otp === null) {
+    throw new \Exception('Failed to generate OTP.');
+}
+
+
+Mail::to($user->email)
+    ->send(new SendOtpMail($otp, $user));
+
 
     return [
-
-        'success' => true,
-
-        'message' => 'OTP resent successfully'
+        'message' => 'OTP sent successfully.',
     ];
 }
 
@@ -284,6 +306,47 @@ public function loginWeb(array $data)
 }
 
 
+//المستخدم الحالي 
+
+
+
+
+public function getCurrentUser()
+{
+    /** @var User $user */
+    $user = User::with(['role', 'department'])
+        ->findOrFail(Auth::id());
+
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'phone' => $user->phone,
+        'role' => $user->role->name,
+        'department' => $user->department?->name,
+    ];
+}
+
+//جميع المستخدمين 
+
+
+public function getAllUsers()
+{
+    return User::with(['role', 'department'])
+        ->get()
+        ->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role?->name,
+                'department' => $user->department?->name,
+                'status' => $user->status,
+            ];
+        })
+        ->values();
+}
 
 
 }

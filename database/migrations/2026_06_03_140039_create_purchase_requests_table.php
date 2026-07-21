@@ -43,6 +43,12 @@ return new class extends Migration
 
 $table->string('request_frequency')->default('normal')->nullable();
 
+
+ $table->string('invoice_file')->nullable();
+        $table->timestamp('invoice_uploaded_at')->nullable();
+        $table->string('invoice_number')->nullable();
+
+
     $table->timestamps();
 
     $table->softDeletes();

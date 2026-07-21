@@ -6,6 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StorePurchaseRequestRequest;
 use App\Services\PurchaseRequestService;
+use App\Http\Requests\UploadInvoiceRequest;
+
+
+
 class PurchaseRequestController extends Controller
 {
     protected PurchaseRequestService $purchaseRequestService;
@@ -177,5 +181,42 @@ public function getPendingManager()
     );
 }
 
+
+//رفع فاتورة 
+
+public function uploadInvoice(
+    UploadInvoiceRequest $request,
+    int $purchaseRequestId
+)
+{
+    $purchaseRequest = $this->purchaseRequestService->uploadInvoice(
+        $purchaseRequestId,
+        $request->file('invoice'),
+        $request->input('invoice_number')
+    );
+
+    return response()->json([
+        'message' => 'Invoice uploaded successfully.',
+        'data' => $purchaseRequest,
+    ]);
+}
+
+
+//جلب فاتورة طلب 
+public function getInvoice($purchaseRequestId)
+{
+    return response()->json(
+        $this->purchaseRequestService->getInvoice($purchaseRequestId)
+    );
+}
+
+//الطلبات المرفوضة 
+
+public function getRejectedPurchaseRequests()
+{
+    return response()->json(
+        $this->purchaseRequestService->getRejectedPurchaseRequests()
+    );
+}
 
 }

@@ -11,35 +11,50 @@ use App\Models\ProductSupplier;
 use App\Models\PurchaseRequestItem;
 use Illuminate\Support\Facades\DB;
 use App\Models\PurchaseRequest;
+use App\Models\InventoryLog;
+use Illuminate\Support\Facades\Auth;
 
 
 class ProductService
 {
    public function create(array $data): Product
 {
-    return Product::create([
+    $product = Product::create([
         'name' => $data['name'],
-
         'code' => $data['code'],
-
         'type' => $data['type'],
-
         'brand' => $data['brand'] ?? null,
-
         'minimum_stock' => $data['minimum_stock'] ?? 0,
-
         'maximum_stock' => $data['maximum_stock'] ?? null,
-
         'unit' => $data['unit'] ?? null,
-
         'description' => $data['description'] ?? null,
-
-        'storage_location'=>$data['storage_location']?? null,
+        'storage_location' => $data['storage_location'] ?? null,
 
         // تبدأ الكمية من الصفر
         'total_quantity' => 0,
     ]);
+
+    // ✔️ ARCHIVE / LOG
+    InventoryLog::create([
+        'action' => 'add_product',
+        'product_id' => $product->id,
+        'quantity' => 0,
+        'reference_type' => 'manual',
+        'reference_id' => null,
+        'data' => [
+            'name' => $product->name,
+            'code' => $product->code,
+            'type' => $product->type,
+            'brand' => $product->brand,
+            'unit' => $product->unit,
+            'storage_location' => $product->storage_location,
+        ],
+        'user_id' => Auth::id(),
+    ]);
+
+    return $product;
 }
+//استلام مواد من لجنة الشراء 
 
 
 
@@ -57,7 +72,7 @@ public function receivePurchaseRequest(array $data)
             ];
         }
 
-        // ✔️ جلب المورد من الطلب (مو من الدخل)
+        // ✔️ المورد من الطلب
         $supplierId = $request->supplier_id;
 
         foreach ($data['items'] as $item) {
@@ -78,10 +93,26 @@ public function receivePurchaseRequest(array $data)
             // ✔️ تحديث المخزون
             $product->increment('total_quantity', $item['quantity']);
 
-            // ✔️ تحديث الكمية المستلمة
+            // ✔️ تحديث الطلب
             PurchaseRequestItem::where('purchase_request_id', $request->id)
                 ->where('product_id', $item['product_id'])
                 ->increment('received_quantity', $item['quantity']);
+
+            // ✔️ LOG (Inventory Archive)
+            InventoryLog::create([
+                'action' => 'stock_in',
+                'product_id' => $item['product_id'],
+                'quantity' => $item['quantity'],
+                'reference_type' => 'purchase_request',
+                'reference_id' => $request->id,
+                'data' => [
+                    'batch_number' => $item['batch_number'],
+                    'expire_date' => $item['expire_date'],
+                    'purchase_price' => $item['purchase_price'] ?? null,
+                    'supplier_id' => $supplierId,
+                ],
+                'user_id' => Auth::id(),
+            ]);
         }
 
         // ✔️ تحديث حالة الطلب
@@ -278,25 +309,45 @@ public function getAllSuppliersWithProducts()
 //حذف منتج 
 
 public function deleteProduct($id)
-    {
-        return DB::transaction(function () use ($id) {
+{
+    return DB::transaction(function () use ($id) {
 
-            $product = Product::with(['suppliers', 'batches'])
-                ->findOrFail($id);
+        $product = Product::with(['suppliers', 'batches'])
+            ->findOrFail($id);
 
-            // حذف العلاقات
-            $product->suppliers()->detach();
-            $product->batches()->delete();
+        // ✔️ ARCHIVE قبل الحذف (Snapshot كامل)
+        InventoryLog::create([
+            'action' => 'delete_product',
+            'product_id' => $product->id,
+            'quantity' => $product->total_quantity ?? 0,
+            'reference_type' => 'manual',
+            'reference_id' => null,
+            'data' => [
+                'name' => $product->name,
+                'code' => $product->code,
+                'type' => $product->type,
+                'brand' => $product->brand,
+                'unit' => $product->unit,
+                'storage_location' => $product->storage_location,
+                'suppliers' => $product->suppliers,
+                'batches' => $product->batches,
+            ],
+            'user_id' => Auth::id(),
+        ]);
 
-            // حذف المنتج
-            $product->delete();
+        // حذف العلاقات
+        $product->suppliers()->detach();
+        $product->batches()->delete();
 
-            return [
-                'message' => 'Product deleted successfully',
-                'product_id' => $id
-            ];
-        });
-    }
+        // حذف المنتج
+        $product->delete();
+
+        return [
+            'message' => 'Product deleted successfully',
+            'product_id' => $id
+        ];
+    });
+}
 
 
 }

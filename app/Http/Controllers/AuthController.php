@@ -51,11 +51,22 @@ class AuthController extends Controller
 
     return response()->json([
         'message' => 'Employee created successfully',
-        'otp' => $result['otp'],
+       
     ]);
 }
 
+public function resendOtp(Request $request)
+{
+    $request->validate([
+        'email' => ['required', 'email'],
+    ]);
 
+    return response()->json(
+        $this->authService->resendOtp(
+            $request->email
+        )
+    );
+}
 
    
 
@@ -89,31 +100,8 @@ public function setPassword(SetPasswordRequest $request)
     }
 
     return response()->json($result);
-}
-public function resendOtp(
-    ResendOtpRequest $request
-)
-{
-    $result = $this->authService->resendOtp(
 
-        $request->validated()
 
-    );
-
-    if (!$result['success']) {
-
-        return response()->json([
-
-            'message' => $result['message']
-
-        ], 400);
-    }
-
-    return response()->json([
-
-        'message' => $result['message']
-
-    ]);
 }
 
 
@@ -184,5 +172,26 @@ public function verifyOtp(VerifyOtpRequest $request)
 
     return response()->json($result);
 }
+
+
+//المستخدم الحالي 
+
+public function getCurrentUser()
+{
+    return response()->json(
+        $this->authService->getCurrentUser()
+    );
+}
+
+
+//جميع المستخدمين 
+
+public function getAllUsers()
+{
+    return response()->json(
+        $this->authService->getAllUsers()
+    );
+}
+
 
 }

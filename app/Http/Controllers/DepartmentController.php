@@ -41,6 +41,16 @@ public function getDepartmentProducts(
     ]);
 }
 
+//جلب جميع مواد القسم 
+
+public function getAllDepartmentProducts(string $departmentName)
+{
+    return response()->json(
+        $this->departmentService->getAllDepartmentProducts($departmentName)
+    );
+}
+
+
 
 
 
